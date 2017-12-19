@@ -1,0 +1,18 @@
+service: ausgaben
+custom: ${file(./serverless.dev.yml)}
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: ${self:custom.environment.STAGE}
+  region: ${self:custom.environment.AWS_REGION}
+functions:
+  accountList:
+    handler: function/accounts.list
+    name: ausgaben-accounts-list-${self:custom.environment.STAGE}
+    events:
+      - http:
+          path: accounts
+          method: post
+          cors: true
+          authorizer:
+            arn: ${self:custom.environment.AWS_COGNITO_USERPOOL_ARN}
