@@ -7,10 +7,10 @@ const corsHeaders = {
   'Access-Control-Allow-Credentials': true // Required for cookies, authorization headers with HTTPS
 }
 
-const headers = body => {
+const h = body => {
   let h = Object.assign({}, corsHeaders)
   if (body) {
-    h = Object.assign(h, {'Content-Type': 'application/vnd.ausgaben.v1+json'})
+    h = Object.assign(h, {'Content-Type': 'application/vnd.ausgaben.v1+json; charset=utf-8'})
   }
   return h
 }
@@ -25,14 +25,17 @@ module.exports = {
     ))
     callback(null, {
       statusCode,
-      headers: headers(body),
+      headers: h(body),
       body: JSON.stringify(body)
     })
   },
-  successHandler: callback => body => {
+  successHandler: callback => (body, headers = {}, statusCodeWithBody = 200) => {
     callback(null, {
-      statusCode: body ? 200 : 202,
-      headers: headers(body),
+      statusCode: body ? statusCodeWithBody : 202,
+      headers: {
+        ...headers,
+        ...h(body)
+      },
       body: body !== undefined ? JSON.stringify(body) : undefined
     })
   }

@@ -4,7 +4,7 @@
   "description": "",
   "main": "handler.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest -i",
     "lint": "standard",
     "precommit": "npm run lint",
     "commitmsg": "commitlint -e"
@@ -12,14 +12,22 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@commitlint/cli": "^5.2.5",
+    "@ausgaben/models": "^1.1.0",
+    "@commitlint/cli": "^5.2.8",
     "@commitlint/config-angular": "^5.1.1",
+    "chalk": "^2.3.0",
+    "dinossauro": "0.0.7",
+    "gherkin": "^5.0.0",
     "husky": "^0.14.3",
-    "jest": "^22.0.1",
-    "serverless": "^1.24.1",
-    "standard": "^10.0.3"
+    "jest": "^22.0.4",
+    "jsonwebtoken": "^8.1.0",
+    "redux": "^3.7.2",
+    "serverless": "^1.25.0",
+    "standard": "^10.0.3",
+    "toposort": "^1.0.6"
   },
   "dependencies": {
-    "@rheactorjs/models": "^2.0.3"
+    "@rheactorjs/event-store-dynamodb": "^1.0.4",
+    "@rheactorjs/models": "^2.1.1"
   }
 }

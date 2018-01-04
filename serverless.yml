@@ -7,7 +7,7 @@ provider:
   region: ${self:custom.environment.AWS_REGION}
 functions:
   accountList:
-    handler: function/accounts.list
+    handler: handler/accounts.list
     name: ausgaben-accounts-list-${self:custom.environment.STAGE}
     events:
       - http:
@@ -16,3 +16,21 @@ functions:
           cors: true
           authorizer:
             arn: ${self:custom.environment.AWS_COGNITO_USERPOOL_ARN}
+resources:
+  Resources:
+    CheckingAccountDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+TableName: ${self:provider.environment.DYNAMODB_TABLE}

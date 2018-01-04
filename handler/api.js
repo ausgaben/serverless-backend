@@ -1,0 +1,14 @@
+const {successHandler} = require('../util/response')
+const {relations} = require('./jsonld')
+const {URIValue} = require('@rheactorjs/value-objects')
+
+module.exports = {
+  api: (event, context, callback) => {
+    successHandler(callback)(
+      relations(new URIValue(process.env.API_ENDPOINT)).index(),
+      {
+        'Cache-Control': 'public, max-age=3600'
+      }
+    )
+  }
+}
