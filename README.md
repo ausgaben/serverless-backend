@@ -6,6 +6,7 @@
 [![semantic-release](https://img.shields.io/badge/semver-semantic%20release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 [![Test Coverage](https://codeclimate.com/github/ausgaben/backend-serverless/badges/coverage.svg)](https://codeclimate.com/github/ausgaben/backend-serverless/coverage)
 [![Code Climate](https://codeclimate.com/github/ausgaben/backend-serverless/badges/gpa.svg)](https://codeclimate.com/github/ausgaben/backend-serverless)
+[![DeepScan Grade](https://deepscan.io/api/projects/1637/branches/6059/badge/grade.svg)](https://deepscan.io/dashboard/#view=project&pid=1637&bid=6059)
 [![Standard - JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
