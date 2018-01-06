@@ -4,7 +4,7 @@
   "description": "",
   "main": "handler.js",
   "scripts": {
-    "test": "jest -i",
+    "test": "API_ENDPOINT=https://api.example.com jest -i --forceExit",
     "lint": "standard",
     "precommit": "npm run lint",
     "commitmsg": "commitlint -e"
@@ -27,7 +27,9 @@
     "toposort": "^1.0.6"
   },
   "dependencies": {
-    "@rheactorjs/event-store-dynamodb": "^1.0.4",
-    "@rheactorjs/models": "^2.1.1"
+    "@rheactorjs/event-store-dynamodb": "^1.2.0",
+    "@rheactorjs/models": "^3.0.0",
+    "joi": "^13.1.0",
+    "uuid": "^3.1.0"
   }
 }

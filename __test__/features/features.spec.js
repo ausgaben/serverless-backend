@@ -10,10 +10,10 @@ const {createStore, combineReducers} = require('redux')
 const toposort = require('toposort')
 const jwt = require('jsonwebtoken')
 const {URIValue, EmailValue} = require('@rheactorjs/value-objects')
+const {List} = require('@rheactorjs/models')
+const uuid = require('uuid')
 
-const {EventStore} = require('@rheactorjs/event-store-dynamodb')
 const {dynamoDB, close} = require('@rheactorjs/event-store-dynamodb/test/helper')
-const {CheckingAccountRepository} = require('../../repository/checking-account')
 const {User, Link} = require('@rheactorjs/models')
 const app = {}
 
@@ -44,11 +44,24 @@ const lambdaProxyEventReducer = (state = {
   headers: {},
   queryStringParameters: null,
   pathParameters: null,
-  body: null
+  body: null,
+  requestContext: {
+    authorizer: {
+      claims: undefined
+    }
+  }
 }, action) => {
   switch (action.type) {
     case 'REQUEST_HEADER':
-      return {...state, headers: {...state.headers, [action.name]: action.value}}
+      return {
+        ...state,
+        headers: {...state.headers, [action.name]: action.value},
+        requestContext: {
+          authorizer: {
+            claims: action.name === 'Authorization' ? jwt.verify(action.value.match('Bearer (.+)')[1], 'secret') : undefined
+          }
+        }
+      }
     case 'REQUEST_METHOD':
       return {...state, httpMethod: action.method}
     case 'REQUEST_RESOURCE':
@@ -96,59 +109,33 @@ const userRepo = {
   getById: id => Promise.resolve(users[id])
 }
 
-const {successHandler} = require('../../util/response')
 const apiHandler = require('../../handler/api')
 const userHandler = require('../../handler/user')
 const checkingAccountHandler = require('../../handler/checkingAccount')
 const endpoints = [
   {path: new RegExp(`GET /api`), handler: apiHandler.api},
   {
-    path: new RegExp('POST /registration'),
+    path: /^POST \/me$/,
     handler: (event, context, callback) => {
-      // In a real serverless app, registration is Cognito
-      const {email, firstname, lastname} = JSON.parse(event.body)
-      userRepo.users[email] = new User({
-        $id: new URIValue(`${process.env.API_ENDPOINT}/user/${email}`),
-        $version: 1,
-        $createdAt: new Date(),
-        email: new EmailValue(email),
-        firstname,
-        lastname
-      })
-      successHandler(callback)({}, {}, 201)
+      userHandler.me({...event}, {...context, userRepo}, callback)
     }
   },
   {
-    path: new RegExp('POST /activate-account'),
-    handler: (event, context, callback) => {
-      // In a real serverless app, registration is Cognito
-      successHandler(callback)({}, {}, 204)
-    }
-  },
-  {
-    path: new RegExp('POST /login'),
-    handler: (event, context, callback) => {
-      // In a real serverless app, registration is Cognito
-      const body = JSON.parse(event.body)
-      successHandler(callback)({
-        $context: 'https://tools.ietf.org/html/rfc7519',
-        token: 'login',
-        $links: [
-          new Link(new URIValue(`${process.env.API_ENDPOINT}/user/${body.email}`), User.$context, false, 'me')
-        ]
-      }, {}, 201)
-    }
-  },
-  {
-    path: /GET \/user\/(.+)/,
-    handler: (event, context, callback) => {
-      const match = event.path.match(/\/user\/(.+)/)
-      userHandler.account({...event, pathParameters: {id: match[1]}}, {...context, userRepo}, callback)
-    }
-  },
-  {
-    path: new RegExp('POST /checking-account'),
+    path: /^POST \/checking-account$/,
     handler: checkingAccountHandler.create
+  },
+  {
+    path: /^POST \/checking-account\/search$/,
+    handler: checkingAccountHandler.search
+  },
+  {
+    path: /^GET \/checking-account\/(.+)$/,
+    handler: (event, context, callback) => {
+      checkingAccountHandler.get({...event, pathParameters: {id: event.path.split('/').pop()}}, {
+        ...context,
+        userRepo
+      }, callback)
+    }
   }
 ]
 
@@ -170,24 +157,29 @@ class ServerlessContext {
       const uri = new URL(match[2], process.env.API_ENDPOINT)
       store.dispatch({type: 'REQUEST_METHOD', method: match[1]})
       store.dispatch({type: 'REQUEST_RESOURCE', path: uri.pathname})
-      const route = this.endpoints.find(({path}) => path.test(`${match[1]} ${uri.pathname}`))
-      if (!route) {
-        throw new Error(`No handler matches "${match[2]}"!`)
-      }
-      return new Promise((resolve, reject) => {
-        route.handler(store.getState().proxyEvent, undefined, (err, response) => {
-          if (err) return reject(err)
-          store.dispatch({type: 'RESPONSE', response})
-          return resolve()
-        })
-      })
-    }
-    if (step === 'this is the request body') {
       store.dispatch({
         type: 'REQUEST_BODY',
-        body: JSON.parse(argument)
+        body: argument ? JSON.parse(argument) : undefined
       })
-      return Promise.resolve()
+
+      const r = `${match[1]} ${uri.pathname}`
+      const route = this.endpoints.find(({path}) => path.test(r))
+      if (!route) {
+        throw new Error(`No handler matches "${r}"!`)
+      }
+
+      return new Promise((resolve, reject) => {
+        Promise
+          .try(() => route.handler(store.getState().proxyEvent, {dynamoDB: app.dynamoDB}, (err, response) => {
+            if (err) return reject(err)
+            store.dispatch({type: 'RESPONSE', response})
+            return resolve()
+          }))
+          .catch(err => {
+            const m = `Executing handler ${route.handler} for ${r} failed: (${err.message}!`
+            reject(new Error(m))
+          })
+      })
     }
     const statusCodeTestRx = /^the status code should be ([0-9]+)$/
     if (statusCodeTestRx.test(step)) {
@@ -199,11 +191,24 @@ class ServerlessContext {
       const match = step.match(headerTestRx)
       return Promise.try(() => expect(store.getState().response.headers).toMatchObject({[match[1]]: match[2]}))
     }
-    const responsePropertyTestRx = /^"([^"]+)" should equal "([^"]+)"$/
-    if (responsePropertyTestRx.test(step)) {
-      const match = step.match(responsePropertyTestRx)
+    const responseStringPropertyTestRx = /^"([^"]+)" should equal "([^"]+)"$/
+    if (responseStringPropertyTestRx.test(step)) {
+      const match = step.match(responseStringPropertyTestRx)
       return Promise.try(() => expect(store.getState().response.body).toMatchObject({[match[1]]: match[2]}))
     }
+
+    const responseBooleanPropertyTestRx = /^"([^"]+)" should equal (true|false)$/
+    if (responseBooleanPropertyTestRx.test(step)) {
+      const match = step.match(responseBooleanPropertyTestRx)
+      return Promise.try(() => expect(store.getState().response.body).toMatchObject({[match[1]]: match[2] === 'true'}))
+    }
+
+    const responseIntegerPropertyTestRx = /^"([^"]+)" should equal ([0-9]+)$/
+    if (responseIntegerPropertyTestRx.test(step)) {
+      const match = step.match(responseIntegerPropertyTestRx)
+      return Promise.try(() => expect(store.getState().response.body).toMatchObject({[match[1]]: +match[2]}))
+    }
+
     const responsePropertyExistTestRx = /^"([^"]+)" should (not )?exist$/
     if (responsePropertyExistTestRx.test(step)) {
       const match = step.match(responsePropertyExistTestRx)
@@ -214,6 +219,18 @@ class ServerlessContext {
       }
     }
 
+    const listResultTestRx = /a list of "([^"]+)" with ([0-9]+) of ([0-9]+) items? should be returned/
+    if (listResultTestRx.test(step)) {
+      const match = step.match(listResultTestRx)
+      return Promise.try(() => {
+        const body = store.getState().response.body
+        expect(body.$context).toEqual(List.$context.toString())
+        body.items.map(({$context}) => expect($context).toEqual(match[1]))
+        expect(body.items).toHaveLength(+match[2])
+        expect(body.total).toEqual(+match[3])
+      })
+    }
+
     const storeLinksRx = /^I store the link to "([^"]+)" as "([^"]+)"/
     if (storeLinksRx.test(step)) {
       const match = step.match(storeLinksRx)
@@ -221,7 +238,7 @@ class ServerlessContext {
         .try(() => {
           const body = store.getState().response.body
           expect(body).toHaveProperty('$links')
-          const link = body.$links.find(({rel}) => rel === match[1])
+          const link = body.$links.find(({rel, subject}) => (/^https?:\/\//.test(match[1]) ? subject : rel) === match[1])
           expect(link).toBeDefined()
           store.dispatch({
             type: 'STORE',
@@ -265,26 +282,64 @@ class ServerlessContext {
           })
         })
     }
-    const appTokenRx = /^I have the ([^ ]+)Token for "([^"]+)" in "([^"]+)"/
-    if (appTokenRx.test(step)) {
-      const match = step.match(appTokenRx)
+
+    const storePropertyOfListItemRx = /^I store "([^"]+)" of the ([0-9]+)[a-z]+ item as "([^"]+)"/
+    if (storePropertyOfListItemRx.test(step)) {
+      const match = step.match(storePropertyOfListItemRx)
+      return Promise
+        .try(() => {
+          const item = store.getState().response.body.items[(+match[2]) - 1]
+          expect(item).toHaveProperty(match[1])
+          store.dispatch({
+            type: 'STORE',
+            value: item[match[1]],
+            key: match[3]
+          })
+        })
+    }
+
+    const userPropertyRx = /the token for this user is stored as "([^"]+)"/
+    if (userPropertyRx.test(step)) {
+      const match = step.match(userPropertyRx)
+      const {email, name} = JSON.parse(argument)
+      const token = this.createToken(email, name)
+      const sub = JSON.parse(Buffer.from(token.split('.')[1], 'base64')).sub
+      userRepo.users[sub] = new User({
+        $id: new URIValue(`${process.env.API_ENDPOINT}/user/${email}`),
+        $version: 1,
+        $createdAt: new Date(),
+        email: new EmailValue(email),
+        name
+      })
       store.dispatch({
         type: 'STORE',
-        value: this.createToken(match[1], match[2]),
-        key: match[3]
+        key: match[1],
+        value: token
       })
       return Promise.resolve()
     }
   }
 
-  createToken (type, subject) {
+  // Creates a token with the properties AWS cognito has
+  // https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-with-identity-providers.html
+  createToken (email, name) {
     return jwt.sign(
-      {},
+      {
+        email,
+        email_verified: 'true',
+        'cognito:username': email,
+        token_use: 'id', // The intended purpose of this token. Its value is always id in the case of the ID token.
+        event_id: uuid.v4(),
+        auth_time: Date.now(),
+        name
+      },
       'secret',
       {
         algorithm: 'HS256',
-        issuer: 'login',
-        subject
+        issuer: 'https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_123456abc',
+        subject: Buffer.from(email).toString('base64'), //  The UUID of the authenticated user. This is not the same as username.
+        audience: '123456789abcdefghijklmnopq', // Contains the client_id with which the user authenticated.
+        expiresIn: '1h'
       }
     )
   }
@@ -300,10 +355,11 @@ const rootStore = createStore(combineReducers({
 }))
 
 beforeAll(() => dynamoDB()
-  .spread((dynamoDB, eventsTable) => {
-    app.checkingAccountRepo = new CheckingAccountRepository(
-      new EventStore('CheckingAccount', dynamoDB, eventsTable)
-    )
+  .spread((dynamoDB, eventsTable, relationsTable, indexTable) => {
+    process.env.TABLE_EVENTS = eventsTable
+    process.env.TABLE_RELATIONS = relationsTable
+    process.env.TABLE_INDEX = indexTable
+    app.dynamoDB = dynamoDB
   }))
 
 afterAll(close)
@@ -314,7 +370,7 @@ afterAll(() => {
       [
         chalk.red(`Failed step: ${steps.failedStep}`),
         chalk.cyan(`Request: ${proxyEvent.httpMethod} ${proxyEvent.path}\n> ${proxyEvent.body}`),
-        chalk.blue(`Response: ${response.statusCode}\n${Object.keys(response.headers).map(header => `${header}: ${response.headers[header]}`).join('\n')}\n\n${JSON.stringify(response.body)}`)
+        chalk.blue(`Response: ${response.statusCode}\n${Object.keys(response.headers).map(header => `${header}: ${response.headers[header]}`).join('\n')}\n\n${JSON.stringify(response.body, null, 2)}`)
       ].join('\n')
     )
   }
@@ -393,6 +449,14 @@ const runFeatures = async () => {
                         result
                       })
                       resolve(result)
+                    })
+                    .catch(err => {
+                      rootStore.dispatch({
+                        type: 'STEP_FAILED',
+                        step: stepText,
+                        error: err
+                      })
+                      return reject(err)
                     })
                 })
               )

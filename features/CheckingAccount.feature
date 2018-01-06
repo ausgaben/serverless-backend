@@ -12,11 +12,10 @@ Feature: CheckingAccount
 
   Scenario: Create a new checking account
 
-    Given this is the request body
+    When I POST to {createCheckingAccountEndpoint}
     """
     {"name": "My first checking account"}
     """
-    When I POST to {createCheckingAccountEndpoint}
     Then the status code should be 202
 
   Scenario: List all my accounts
@@ -43,5 +42,4 @@ Feature: CheckingAccount
     And I store the link to "create-spending" as "CreateSpendingEndpoint"
     And I store the link to "create-periodical" as "CreatePeriodicalEndpoint"
     And I store the link to the list "https://github.com/ausgaben/ausgaben-rheactor/wiki/JsonLD#Periodical" as "ListPeriodicalsEndpoint"
-    And I store the link of "https://github.com/ausgaben/ausgaben-rheactor/wiki/JsonLD#Report" as "createdCheckingAccountReport"
-
+    And I store the link to "https://github.com/ausgaben/ausgaben-rheactor/wiki/JsonLD#Report" as "createdCheckingAccountReport"

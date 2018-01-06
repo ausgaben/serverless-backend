@@ -28,7 +28,7 @@ exports.relations = apiBase => {
   relations.addLink(JsonWebToken.$context, new Link(new URIValue(`${apiBase}/token/renew`), JsonWebToken.$context, false, 'token-renew'))
 
   relations.addIndexLink(new Link(new URIValue(`${apiBase}/checking-account`), CheckingAccount.$context, false, 'create-checking-account'))
-  relations.addLink(User.$context, new Link(new URIValue(`${apiBase}/search/checking-account`), CheckingAccount.$context, true, 'my-checking-accounts'))
+  relations.addLink(User.$context, new Link(new URIValue(`${apiBase}/checking-account/search`), CheckingAccount.$context, true, 'my-checking-accounts'))
   relations.addLink(User.$context, new Link(new URIValue(`${apiBase}/user/:id/email-change`), User.$context, false, 'change-email'))
   relations.addLink(User.$context, new Link(new URIValue(`${apiBase}/user/:id/email-change/confirm`), User.$context, false, 'change-email-confirm'))
   relations.addLink(User.$context, new Link(new URIValue(`${apiBase}/user/:id/email`), User.$context, false, 'update-email'))

@@ -20,8 +20,8 @@ describe('CheckingAccountRepository', () => {
   it('should persist', (done) => {
     Promise
       .join(
-        checkingAccountRepo.add({name: 'CheckingAccount 1'}),
-        checkingAccountRepo.add({name: 'CheckingAccount 2'})
+        checkingAccountRepo.add({name: 'CheckingAccount 1', users: ['foo']}),
+        checkingAccountRepo.add({name: 'CheckingAccount 2', users: ['bar']})
       )
       .spread((event1, event2) => {
         expect(event1).toBeInstanceOf(ModelEvent)
@@ -33,7 +33,9 @@ describe('CheckingAccountRepository', () => {
           )
           .spread((a1, a2) => {
             expect(a1.name).toEqual('CheckingAccount 1')
+            expect(a1.users).toEqual(['foo'])
             expect(a2.name).toEqual('CheckingAccount 2')
+            expect(a2.users).toEqual(['bar'])
             done()
           })
       })

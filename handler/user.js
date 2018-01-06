@@ -1,25 +1,24 @@
-const {successHandler} = require('../util/response')
-const {UserRepository} = require('../repository/user')
-const {relations} = require('./jsonld')
+'use strict'
+
+const {successHandler, errorHandler} = require('../util/response')
 const {User} = require('@rheactorjs/models')
-const {URIValue} = require('@rheactorjs/value-objects')
+const {URIValue, EmailValue} = require('@rheactorjs/value-objects')
+const {relations} = require('./jsonld')
+const {authorize} = require('./util')
 
 module.exports = {
-  list: (event, context, callback) => {
-    console.log(event)
-    console.log(context)
-    successHandler(callback)({event, context})
-  },
-  account: (event, context, callback) => {
-    const userRepo = context.userRepo || new UserRepository()
-    const jsonld = relations(new URIValue(process.env.API_ENDPOINT))
-    userRepo
-      .getById(event.pathParameters.id)
+  me: (event, context, callback) => {
+    authorize(event)
       .then(user => {
-        successHandler(callback)({
-          ...user.toJSON(),
-          $links: jsonld.createLinks(User.$context, user.email.toString())
-        })
+        successHandler(callback)(new User({
+          $id: new URIValue(`${process.env.API_ENDPOINT}/user/${user}`),
+          $version: 1,
+          $createdAt: new Date(),
+          email: new EmailValue(event.requestContext.authorizer.claims.email),
+          name: event.requestContext.authorizer.claims.name,
+          $links: relations(new URIValue(process.env.API_ENDPOINT)).createLinks(User.$context, user)
+        }))
       })
+      .catch(errorHandler(callback))
   }
 }

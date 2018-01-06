@@ -1,3 +1,5 @@
+'use strict'
+
 const {successHandler} = require('../util/response')
 const {relations} = require('./jsonld')
 const {URIValue} = require('@rheactorjs/value-objects')
