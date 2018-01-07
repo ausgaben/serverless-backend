@@ -31,7 +31,6 @@ describe('CreateMonthlySpendingsCommand', () => {
 
   let periodical1 = new PeriodicalModel(
     '4242',
-    '17',
     'Salary',
     'Tanja\'s Salary',
     165432,
@@ -44,7 +43,6 @@ describe('CreateMonthlySpendingsCommand', () => {
 
   let periodical2 = new PeriodicalModel(
     '4242',
-    '17',
     'Salary',
     'Markus\'s Salary',
     123456,

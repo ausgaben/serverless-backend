@@ -1,6 +1,6 @@
 'use strict'
 
-const {successHandler, errorHandler} = require('../util/response')
+const {successHandler, errorHandler} = require('./response')
 const {User} = require('@rheactorjs/models')
 const {URIValue, EmailValue} = require('@rheactorjs/value-objects')
 const {relations} = require('./jsonld')

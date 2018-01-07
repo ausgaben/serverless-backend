@@ -19,28 +19,24 @@ describe('PeriodicalRepository', () => {
   afterAll(close)
 
   it('should persist', (done) => {
-    let periodical1 = {
-      checkingAccount: '42',
-      author: '17',
-      category: 'Salary',
-      title: 'Tanja\'s Salary',
-      amount: 165432,
-      estimate: false,
-      startsAt: new Date('2015-01-01')
-    }
-    let periodical2 = {
-      checkingAccount: '42',
-      author: '17',
-      category: 'Salary',
-      title: 'Markus\'s Salary',
-      amount: 123456,
-      estimate: false,
-      startsAt: new Date('2015-01-02')
-    }
     Promise
       .join(
-        periodicalRepo.add(periodical1),
-        periodicalRepo.add(periodical2)
+        periodicalRepo.add({
+          checkingAccount: '42',
+          category: 'Salary',
+          title: 'Tanja\'s Salary',
+          amount: 165432,
+          estimate: false,
+          startsAt: new Date('2015-01-01')
+        }),
+        periodicalRepo.add({
+          checkingAccount: '42',
+          category: 'Salary',
+          title: 'Markus\'s Salary',
+          amount: 123456,
+          estimate: false,
+          startsAt: new Date('2015-01-02')
+        })
       )
       .spread((event1, event2) => {
         expect(event1).toBeInstanceOf(ModelEvent)
@@ -52,7 +48,6 @@ describe('PeriodicalRepository', () => {
           )
           .spread((p1, p2) => {
             expect(p1.checkingAccount).toEqual('42')
-            expect(p1.author).toEqual('17')
             expect(p1.category).toEqual('Salary')
             expect(p1.title).toEqual('Tanja\'s Salary')
             expect(p1.amount).toEqual(165432)
@@ -60,7 +55,6 @@ describe('PeriodicalRepository', () => {
             expect(p1.estimate).toEqual(false)
             expect(p1.enabledIn).toEqual(4095)
             expect(p2.checkingAccount).toEqual('42')
-            expect(p2.author).toEqual('17')
             expect(p2.category).toEqual('Salary')
             expect(p2.title).toEqual('Markus\'s Salary')
             expect(p2.amount).toEqual(123456)

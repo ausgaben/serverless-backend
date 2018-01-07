@@ -1,10 +1,9 @@
 'use strict'
 
-const {NonEmptyString, AggregateRelation, EventStore} = require('@rheactorjs/event-store-dynamodb')
+const {AggregateRelation, EventStore} = require('@rheactorjs/event-store-dynamodb')
 const {CheckingAccountRepository} = require('../repository/checking-account')
 const {SpendingRepository} = require('../repository/spending')
 const {AccessDeniedError} = require('@rheactorjs/errors')
-const t = require('tcomb')
 
 /**
  * Creates a new CheckingAccount service
@@ -25,7 +24,7 @@ class CheckingAccountService {
   }
 
   create (name, user) {
-    return this.checkingAccountRepo.add({name, user})
+    return this.checkingAccountRepo.add({name, users: [user]})
       .then(() => undefined)
   }
 
@@ -57,18 +56,23 @@ class CheckingAccountService {
   }
 
   createSpending (user, checkingAccountId, category, title, amount, booked = false, bookedAt, saving = false) {
-    const sig = ['CheckingAccountService', 'createSpending()']
     return this.getById(user, checkingAccountId)
-      .then(checkingAccount => this.spendingRepo.add({
-        checkingAccount: checkingAccount.meta.id,
-        category: NonEmptyString(category, sig.concat('category:String')),
-        title: NonEmptyString(title, sig.concat('title:String')),
-        amount: t.Integer(amount, sig.concat('amount:Integer')),
-        booked: t.Boolean(booked, sig.concat('booked:Boolean')),
-        bookedAt: t.maybe(t.Date)(bookedAt, sig.concat('bookedAt:?Date')),
-        saving: t.Boolean(saving, sig.concat('saving:Boolean')),
-        author: user
+      .then(() => this.spendingRepo.add({
+        checkingAccount: checkingAccountId, category, title, amount, booked, bookedAt, saving
       }))
+      .then(() => undefined)
+  }
+
+  updateSpending (user, id, category, title, amount, booked, bookedAt, saving) {
+    return this.getSpendingById(user, id)
+      .then(spending => this.spendingRepo.persistEvent(spending.update({
+        category,
+        title,
+        amount,
+        booked,
+        bookedAt,
+        saving
+      })))
       .then(() => undefined)
   }
 
@@ -79,6 +83,19 @@ class CheckingAccountService {
         return Promise.all(pagination.splice(spendingIds).map(id => this.spendingRepo.getById(id)))
           .then(items => pagination.result(items, total))
       })
+  }
+
+  getSpendingById (user, id) {
+    return this.spendingRepo.getById(id)
+      .then(spending => this.getById(user, spending.checkingAccount)
+        .then(() => spending)
+      )
+  }
+
+  deleteSpendingById (user, id) {
+    return this.getSpendingById(user, id)
+      .then(spending => this.spendingRepo.persistEvent(spending.delete()))
+      .then(() => undefined)
   }
 }
 

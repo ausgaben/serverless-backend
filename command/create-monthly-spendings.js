@@ -1,3 +1,5 @@
+'use strict'
+
 /**
  * @param {PeriodicalRepository} periodicalsRepository
  * @param {SpendingRepository} spendingsRepository
@@ -20,7 +22,6 @@ class CreateMonthlySpendingsCommand {
       .findByMonth(month)
       .map(periodical => this.spendingsRepository.add({
         checkingAccount: periodical.checkingAccount,
-        author: periodical.author,
         category: periodical.category,
         title: periodical.title,
         amount: periodical.amount,

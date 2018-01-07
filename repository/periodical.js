@@ -1,6 +1,7 @@
-const {AggregateRepository} = require('@rheactorjs/event-store-dynamodb')
+const {AggregateRepository, AggregateMeta} = require('@rheactorjs/event-store-dynamodb')
 const {PeriodicalModel} = require('../model/periodical')
 const {Date: DateType} = require('tcomb')
+const {v4} = require('uuid')
 
 /**
  * Creates a new periodical repository
@@ -16,21 +17,11 @@ class PeriodicalRepository extends AggregateRepository {
   }
 
   /**
-   * @param {object} periodical
+   * @param {object} payload
    */
-  add (periodical) {
-    const payload = {
-      checkingAccount: periodical.checkingAccount,
-      author: periodical.author,
-      category: periodical.category,
-      title: periodical.title,
-      amount: periodical.amount,
-      estimate: periodical.estimate,
-      startsAt: periodical.startsAt ? periodical.startsAt.toISOString() : undefined,
-      enabledIn: periodical.enabledIn,
-      saving: periodical.saving
-    }
-    return super.add(payload)
+  add (payload) {
+    return super
+      .persistEvent(PeriodicalModel.create(payload, new AggregateMeta(v4(), 1)))
       .then(event => this.relation.addRelatedId('checkingAccount', payload.checkingAccount, event.aggregateId)
         .then(() => event)
       )

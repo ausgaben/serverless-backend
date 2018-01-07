@@ -23,7 +23,6 @@ describe('SpendingRepository', () => {
       .join(
         spendingRepo.add({
           checkingAccount: '42',
-          author: '17',
           category: 'Salary',
           title: 'Tanja\'s Salary',
           amount: 165432,
@@ -32,7 +31,6 @@ describe('SpendingRepository', () => {
         }),
         spendingRepo.add({
           checkingAccount: '42',
-          author: '17',
           category: 'Salary',
           title: 'Markus\'s Salary',
           amount: 123456,
@@ -50,14 +48,12 @@ describe('SpendingRepository', () => {
           )
           .spread((s1, s2) => {
             expect(s1.checkingAccount).toEqual('42')
-            expect(s1.author).toEqual('17')
             expect(s1.category).toEqual('Salary')
             expect(s1.title).toEqual('Tanja\'s Salary')
             expect(s1.amount).toEqual(165432)
             expect(s1.bookedAt.getTime()).toEqual(new Date('2015-01-01').getTime())
             expect(s1.booked).toEqual(true)
             expect(s2.checkingAccount).toEqual('42')
-            expect(s2.author).toEqual('17')
             expect(s2.category).toEqual('Salary')
             expect(s2.title).toEqual('Markus\'s Salary')
             expect(s2.amount).toEqual(123456)

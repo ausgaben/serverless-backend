@@ -1,5 +1,6 @@
-const {AggregateRepository} = require('@rheactorjs/event-store-dynamodb')
+const {AggregateRepository, AggregateMeta} = require('@rheactorjs/event-store-dynamodb')
 const {SpendingModel} = require('../model/spending')
+const {v4} = require('uuid')
 
 /**
  * Creates a new spending repository
@@ -15,23 +16,11 @@ class SpendingRepository extends AggregateRepository {
   }
 
   /**
-   * @param {SpendingModel} spending
+   * @param {object} payload
    */
-  add (spending) {
-    const payload = {
-      checkingAccount: spending.checkingAccount,
-      author: spending.author,
-      category: spending.category,
-      title: spending.title,
-      amount: spending.amount,
-      booked: spending.booked,
-      saving: spending.saving
-    }
-    if (spending.bookedAt) {
-      payload.bookedAt = spending.bookedAt
-    }
+  add (payload) {
     return super
-      .add(payload)
+      .persistEvent(SpendingModel.create(payload, new AggregateMeta(v4(), 1)))
       .then(event => this.relation.addRelatedId('checkingAccount', payload.checkingAccount, event.aggregateId)
         .then(() => event))
   }
@@ -40,11 +29,10 @@ class SpendingRepository extends AggregateRepository {
    * Deletes a Spending
    *
    * @param {SpendingModel} spending
-   * @param {UserModel} author
    * @return {Promise.<SpendingDeletedEvent>}
    */
-  remove (spending, author) {
-    return super.remove(spending.meta.id, spending.meta.version, {author: author.meta.id})
+  remove (spending) {
+    return super.remove(spending.meta.id, spending.meta.version)
       .then(event => this.relation.removeRelatedId('checkingAccount', spending.checkingAccount, spending.meta.id)
         .then(() => event)
       )

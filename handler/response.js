@@ -2,7 +2,7 @@
 
 const {HttpProblem} = require('@rheactorjs/models')
 const {URIValue} = require('@rheactorjs/value-objects')
-const {ValidationFailedError} = require('@rheactorjs/errors')
+const {ValidationFailedError, EntryDeletedError} = require('@rheactorjs/errors')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // Required for CORS support to work
@@ -23,6 +23,8 @@ module.exports = {
     const $context = new URIValue(`https://github.com/Ausgaben/models#${error.name}`)
     if (error instanceof ValidationFailedError) {
       statusCode = 400
+    } else if (error instanceof EntryDeletedError) {
+      statusCode = 404
     }
     const body = JSON.stringify(new HttpProblem(
       $context, error.message, statusCode, `${error}`

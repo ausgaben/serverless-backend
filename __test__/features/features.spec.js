@@ -57,18 +57,21 @@ const lambdaProxyEventReducer = (state = {
 }, action) => {
   switch (action.type) {
     case 'REQUEST_HEADER':
-      return Object.assign(
+      const newState = Object.assign(
         {},
         state,
         {
-          headers: Object.assign({}, state.headers, {[action.name]: action.value}),
-          requestContext: {
-            authorizer: {
-              claims: action.name === 'Authorization' ? jwt.verify(action.value.match('Bearer (.+)')[1], 'secret') : undefined
-            }
-          }
+          headers: Object.assign({}, state.headers, {[action.name]: action.value})
         }
       )
+      if (action.name === 'Authorization') {
+        newState.requestContext = {
+          authorizer: {
+            claims: action.name === 'Authorization' ? jwt.verify(action.value.match('Bearer (.+)')[1], 'secret') : undefined
+          }
+        }
+      }
+      return newState
     case 'REQUEST_METHOD':
       return Object.assign({}, state, {httpMethod: action.method})
     case 'REQUEST_RESOURCE':
@@ -150,6 +153,24 @@ const endpoints = [
     path: /^POST \/checking-account\/([^/]+)\/spending\/search$/,
     handler: (event, context, callback) => {
       spendingHandler.search(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+    }
+  },
+  {
+    path: /^PUT \/spending\/(.+)$/,
+    handler: (event, context, callback) => {
+      spendingHandler.update(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)
+    }
+  },
+  {
+    path: /^GET \/spending\/(.+)$/,
+    handler: (event, context, callback) => {
+      spendingHandler.get(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)
+    }
+  },
+  {
+    path: /^DELETE \/spending\/(.+)$/,
+    handler: (event, context, callback) => {
+      spendingHandler.delete(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)
     }
   }
 ]
@@ -417,7 +438,7 @@ afterAll(() => {
     console.error(
       [
         chalk.red(`Failed step: ${steps.failedStep}`),
-        chalk.cyan(`Request: ${proxyEvent.httpMethod} ${proxyEvent.path}\n> ${proxyEvent.body}`),
+        chalk.cyan(`Request: ${proxyEvent.httpMethod} ${proxyEvent.path}\n${Object.keys(proxyEvent.headers).map(header => `> ${header}: ${proxyEvent.headers[header]}`).join('\n')}\n\n> ${proxyEvent.body}`),
         chalk.blue(`Response: ${response.statusCode}\n${Object.keys(response.headers).map(header => `${header}: ${response.headers[header]}`).join('\n')}\n\n${JSON.stringify(response.body, null, 2)}`)
       ].join('\n')
     )
@@ -460,11 +481,15 @@ const runFeatures = () => Promise
                   steps,
                   ({text: step, argument, keyword}) => new Promise((resolve, reject) => {
                     // Replace Gherkin arguments in strings
-                    const replaceArguments = str => Object.keys(dataset).reduce((str, key) => str.replace(new RegExp(`<${key}>`, 'g'), dataset[key]), str)
+                    const replaceArguments = str => Object.keys(dataset).reduce((str, key) => str.replace(new RegExp(
+  `<${key}>`
+, 'g'), dataset[key]), str)
 
                     // Replace {foo} storage placeholders
                     const storage = rootStore.getState().storage
-                    const replacePlaceholders = str => Object.keys(storage).reduce((str, key) => str.replace(new RegExp(`{${key}}`, 'g'), storage[key]), str)
+                    const replacePlaceholders = str => Object.keys(storage).reduce((str, key) => str.replace(new RegExp(
+  `{${key}}`
+, 'g'), storage[key]), str)
 
                     // Replace
                     // In step
@@ -485,7 +510,9 @@ const runFeatures = () => Promise
                         type: 'STEP_FAILED',
                         step: stepText
                       })
-                      return reject(new Error(`Unmatched step: ${stepText}!`))
+                      return reject(new Error(
+  `Unmatched step: ${stepText}!`
+))
                     }
                     p
                       .then(result => {

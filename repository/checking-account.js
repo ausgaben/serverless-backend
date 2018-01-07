@@ -1,6 +1,7 @@
-const {AggregateRepository} = require('@rheactorjs/event-store-dynamodb')
+const {AggregateRepository, AggregateMeta} = require('@rheactorjs/event-store-dynamodb')
 const {CheckingAccountModel} = require('../model/checking-account')
 const {NonEmptyString} = require('@rheactorjs/event-store-dynamodb')
+const {v4} = require('uuid')
 
 /**
  * Creates a new checkingAccount repository
@@ -14,13 +15,10 @@ class CheckingAccountRepository extends AggregateRepository {
     this.relation = aggregateRelation
   }
 
-  add ({name, user}) {
+  add (payload) {
     return super
-      .add({
-        name: NonEmptyString(name, ['CheckingAccountRepository', 'add()', 'name:String']),
-        users: [NonEmptyString(user, ['CheckingAccountRepository', 'add()', 'user:String'])]
-      })
-      .then(event => this.relation.addRelatedId('user', user, event.aggregateId)
+      .persistEvent(CheckingAccountModel.create(payload, new AggregateMeta(v4(), 1)))
+      .then(event => Promise.all(payload.users.map(user => this.relation.addRelatedId('user', user, event.aggregateId)))
         .then(() => event)
       )
   }

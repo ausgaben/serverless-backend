@@ -1,6 +1,6 @@
 'use strict'
 
-const {successHandler, errorHandler} = require('../util/response')
+const {successHandler, errorHandler} = require('./response')
 const {Pagination} = require('@rheactorjs/event-store-dynamodb')
 const Joi = require('joi')
 const {List} = require('@rheactorjs/models')
@@ -29,7 +29,7 @@ module.exports = {
         validate(
           JSON.parse(event.body),
           Joi.object().keys({
-            name: NonEmptyString
+            name: NonEmptyString.required()
           })),
         authorize(event)
       ])
@@ -59,7 +59,7 @@ module.exports = {
         validate(
           event.pathParameters,
           Joi.object().keys({
-            id: NonEmptyString
+            id: NonEmptyString.required()
           })
         ),
         authorize(event)

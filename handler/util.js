@@ -12,10 +12,9 @@ const checkingAccountService = context => new CheckingAccountService(
   process.env.TABLE_INDEX || 'ausgaben-index'
 )
 
-const NonEmptyString = Joi.string().min(1).required().trim()
-const Truthy = Joi.boolean().falsy([0, '0']).truthy([1, '1'])
-const TruthyDefaultFalse = Truthy.default(false)
-const Integer = Joi.number().integer().required()
+const NonEmptyString = Joi.string().min(1).trim()
+const Boolean = Joi.boolean().falsy([0, '0']).truthy([1, '1'])
+const Integer = Joi.number().integer()
 const validate = (data, schema) => {
   const result = Joi.validate(data || {}, schema)
   if (result.error) {
@@ -32,8 +31,7 @@ module.exports = {
   joi: {
     validate,
     NonEmptyString,
-    TruthyDefaultFalse,
-    Truthy,
+    Boolean,
     Integer
   }
 }

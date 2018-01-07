@@ -23,6 +23,28 @@ class CheckingAccountModel extends AggregateRoot {
   }
 
   /**
+   * @param {Object} data
+   * @param {AggregateMeta} meta
+   * @throws TypeError if the creation fails due to invalid payload
+   * @returns {ModelEvent} the create event
+   */
+  static create ({name, users, monthly = false, savings = false}, meta) {
+    const s = [].concat.bind(['CheckingAccountModel', 'create()'])
+    return new ModelEvent(
+      meta.id,
+      1,
+      CheckingAccountCreatedEvent,
+      {
+        name: NonEmptyString(name, s('name:String')),
+        users: NonEmptyListOfNonEmptyStrings(users, s('users:String[]')),
+        monthly: BooleanType(monthly, s('monthly:Boolean')),
+        savings: BooleanType(savings, s('savings:Boolean'))
+      },
+      meta.createdAt
+    )
+  }
+
+  /**
    * Applies the event
    *
    * @param {ModelEvent} event

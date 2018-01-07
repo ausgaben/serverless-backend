@@ -1,4 +1,4 @@
-const {AggregateRoot, NonEmptyString, AggregateMeta} = require('@rheactorjs/event-store-dynamodb')
+const {AggregateRoot, NonEmptyString, AggregateMeta, ModelEvent} = require('@rheactorjs/event-store-dynamodb')
 const {UnhandledDomainEventError} = require('@rheactorjs/errors')
 const {irreducible, Boolean: BooleanType, Integer: IntegerType, maybe, Date: DateType} = require('tcomb')
 const {PeriodicalCreatedEvent} = require('./events')
@@ -7,7 +7,6 @@ const MaybeDateType = maybe(DateType, 'MaybeDateType')
 class PeriodicalModel extends AggregateRoot {
   /**
    * @param {String} checkingAccount
-   * @param {String} author
    * @param {String} category
    * @param {String} title
    * @param {Number} amount
@@ -18,10 +17,9 @@ class PeriodicalModel extends AggregateRoot {
    * @param {AggregateMeta} meta
    * @throws TypeError if the creation fails due to invalid payload
    */
-  constructor (checkingAccount, author, category, title, amount, estimate, startsAt, enabledIn, saving = false, meta) {
+  constructor (checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving = false, meta) {
     super(meta)
-    this.checkingAccount = NonEmptyString(checkingAccount, ['PeriodicalModel', 'checkingAccount:AggregateId'])
-    this.author = NonEmptyString(author, ['PeriodicalModel', 'author:AggregateId'])
+    this.checkingAccount = NonEmptyString(checkingAccount, ['PeriodicalModel', 'checkingAccount:String'])
     this.category = NonEmptyString(category, ['PeriodicalModel', 'category:String'])
     this.title = NonEmptyString(title, ['PeriodicalModel', 'title:String'])
     this.amount = IntegerType(amount, ['PeriodicalModel', 'amount:Integer'])
@@ -29,6 +27,32 @@ class PeriodicalModel extends AggregateRoot {
     this.startsAt = MaybeDateType(startsAt, ['PeriodicalModel', 'startsAt:Date'])
     this.enabledIn = IntegerType(enabledIn || PeriodicalModel.monthFlags.reduce((all, flag) => all | flag, 0), ['PeriodicalModel', 'enabledIn:Integer'])
     this.saving = BooleanType(saving, ['PeriodicalModel', 'saving:Boolean'])
+  }
+
+  /**
+   * @param {Object} data
+   * @param {AggregateMeta} meta
+   * @throws TypeError if the creation fails due to invalid payload
+   * @returns {ModelEvent} the create event
+   */
+  static create ({checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving = false}, meta) {
+    const s = [].concat.bind(['PeriodicalModel', 'create()'])
+    return new ModelEvent(
+      meta.id,
+      1,
+      PeriodicalCreatedEvent,
+      {
+        checkingAccount: NonEmptyString(checkingAccount, s('checkingAccount:String')),
+        category: NonEmptyString(category, s('category:String')),
+        title: NonEmptyString(title, s('title:String')),
+        amount: IntegerType(amount, s('amount:Integer')),
+        estimate: BooleanType(estimate, s('estimate:Boolean')),
+        startsAt: MaybeDateType(startsAt, s('startsAt:Date')),
+        enabledIn: IntegerType(enabledIn || PeriodicalModel.monthFlags.reduce((all, flag) => all | flag, 0), s('enabledIn:Integer')),
+        saving: BooleanType(saving, s('saving:Boolean'))
+      },
+      meta.createdAt
+    )
   }
 
   /**
@@ -40,10 +64,10 @@ class PeriodicalModel extends AggregateRoot {
    * @throws UnhandledDomainEventError
    */
   static applyEvent (event, periodical) {
-    const {name, payload: {checkingAccount, author, category, title, amount, estimate, startsAt, enabledIn, saving}, createdAt, aggregateId} = event
+    const {name, payload: {checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving}, createdAt, aggregateId} = event
     switch (name) {
       case PeriodicalCreatedEvent:
-        return new PeriodicalModel(checkingAccount, author, category, title, amount, estimate, startsAt ? new Date(startsAt) : undefined, enabledIn, saving, new AggregateMeta(aggregateId, 1, createdAt))
+        return new PeriodicalModel(checkingAccount, category, title, amount, estimate, startsAt ? new Date(startsAt) : undefined, enabledIn, saving, new AggregateMeta(aggregateId, 1, createdAt))
       default:
         throw new UnhandledDomainEventError(event.name)
     }

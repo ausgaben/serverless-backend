@@ -8,7 +8,6 @@ const MaybeDateType = maybe(DateType, 'MaybeDateType')
 class SpendingModel extends AggregateRoot {
   /**
    * @param {String} checkingAccount
-   * @param {String} author
    * @param {String} category
    * @param {String} title
    * @param {Number} amount
@@ -18,16 +17,67 @@ class SpendingModel extends AggregateRoot {
    * @param {AggregateMeta} meta
    * @throws TypeError if the creation fails due to invalid payload
    */
-  constructor (checkingAccount, author, category, title, amount, booked = false, bookedAt, saving = false, meta) {
+  constructor (checkingAccount, category, title, amount, booked = false, bookedAt, saving = false, meta) {
     super(meta)
-    this.checkingAccount = NonEmptyString(checkingAccount, ['SpendingModel', 'checkingAccount:AggregateId'])
-    this.author = NonEmptyString(author, ['SpendingModel', 'author:AggregateId'])
+    this.checkingAccount = NonEmptyString(checkingAccount, ['SpendingModel', 'checkingAccount:String'])
     this.category = NonEmptyString(category, ['SpendingModel', 'category:String'])
     this.title = NonEmptyString(title, ['SpendingModel', 'title:String'])
     this.amount = IntegerType(amount, ['SpendingModel', 'amount:Integer'])
     this.booked = BooleanType(booked, ['SpendingModel', 'booked:Boolean'])
     this.bookedAt = MaybeDateType(bookedAt, ['SpendingModel', 'Date:Date'])
     this.saving = BooleanType(saving, ['SpendingModel', 'saving:Boolean'])
+  }
+
+  /**
+   * @param {Object} data
+   * @param {AggregateMeta} meta
+   * @throws TypeError if the creation fails due to invalid payload
+   * @returns {ModelEvent} the create event
+   */
+  static create ({checkingAccount, category, title, amount, booked = false, bookedAt, saving = false}, meta) {
+    const s = [].concat.bind(['SpendingModel', 'create()'])
+    return new ModelEvent(
+      meta.id,
+      1,
+      SpendingCreatedEvent,
+      {
+        checkingAccount: NonEmptyString(checkingAccount, s('checkingAccount:String')),
+        category: NonEmptyString(category, s('category:String')),
+        title: NonEmptyString(title, s('title:String')),
+        amount: IntegerType(amount, s('amount:Integer')),
+        booked: BooleanType(booked, s('booked:Boolean')),
+        bookedAt: MaybeDateType(bookedAt, s('Date:Date')),
+        saving: BooleanType(saving, s('saving:Boolean'))
+      },
+      meta.createdAt
+    )
+  }
+
+  /**
+   * @param {Object} payload
+   * @returns {ModelEvent}
+   */
+  update ({category, title, amount, booked, bookedAt, saving}) {
+    const s = [].concat.bind(['SpendingModel', 'update()'])
+    return new ModelEvent(
+      this.meta.id,
+      this.meta.version + 1,
+      SpendingUpdatedEvent,
+      {
+        category: category !== undefined ? NonEmptyString(category, s('category:String')) : this.category,
+        title: title !== undefined ? NonEmptyString(title, s('title:String')) : this.title,
+        amount: amount !== undefined ? IntegerType(amount, s('amount:Integer')) : this.amount,
+        booked: booked !== undefined ? BooleanType(booked, s('booked:Boolean')) : this.booked,
+        bookedAt: bookedAt ? bookedAt.toISOString() : (this.bookedAt ? DateType(this.bookedAt, s('bookedAt:Date')).toISOString() : undefined),
+        saving: saving !== undefined ? BooleanType(saving, s('saving:Boolean')) : this.saving
+      })
+  }
+
+  /**
+   * @returns {ModelEvent}
+   */
+  delete () {
+    return new ModelEvent(this.meta.id, this.meta.version + 1, SpendingDeletedEvent)
   }
 
   /**
@@ -39,37 +89,20 @@ class SpendingModel extends AggregateRoot {
    * @throws UnhandledDomainEventError
    */
   static applyEvent (event, spending) {
-    const {name, payload: {checkingAccount, author, category, title, amount, booked, bookedAt, saving}, createdAt, aggregateId} = event
+    const {name, payload: {checkingAccount, category, title, amount, booked, bookedAt, saving}, createdAt, aggregateId} = event
     switch (name) {
       case SpendingCreatedEvent:
-        return new SpendingModel(checkingAccount, author, category, title, amount, booked, bookedAt ? new Date(bookedAt) : undefined, saving, new AggregateMeta(aggregateId, 1, createdAt))
+        return new SpendingModel(checkingAccount, category, title, amount, booked, bookedAt ? new Date(bookedAt) : undefined, saving, new AggregateMeta(aggregateId, 1, createdAt))
       case SpendingDeletedEvent:
-        return new SpendingModel(spending.checkingAccount, spending.author, spending.category, spending.title, spending.amount, spending.booked, spending.bookedAt, spending.saving, spending.meta.deleted(createdAt))
+        return new SpendingModel(spending.checkingAccount, spending.category, spending.title, spending.amount, spending.booked, spending.bookedAt, spending.saving, spending.meta.deleted(createdAt))
       case SpendingUpdatedEvent:
         const d = {
-          checkingAccount, author, category, title, amount, booked, bookedAt, saving
+          category, title, amount, booked, bookedAt, saving
         }
-        return new SpendingModel(d.checkingAccount, d.author, d.category, d.title, d.amount, d.booked, d.bookedAt ? new Date(d.bookedAt) : undefined, d.saving, spending.meta.updated(createdAt))
+        return new SpendingModel(spending.checkingAccount, d.category, d.title, d.amount, d.booked, d.bookedAt ? new Date(d.bookedAt) : undefined, d.saving, spending.meta.updated(createdAt))
       default:
         throw new UnhandledDomainEventError(event.name)
     }
-  }
-
-  /**
-   * @param {Object} payload
-   * @returns {ModelEvent}
-   */
-  update (payload) {
-    return new ModelEvent(this.meta.id, SpendingUpdatedEvent, {
-      checkingAccount: this.checkingAccount,
-      author: this.author,
-      category: payload.category || this.category,
-      title: payload.title || this.title,
-      amount: payload.amount || this.amount,
-      booked: payload.booked !== undefined ? payload.booked : this.booked,
-      bookedAt: payload.bookedAt ? payload.bookedAt.toISOString() : (this.bookedAt ? this.bookedAt.toISOString() : undefined),
-      saving: payload.saving !== undefined ? payload.saving : this.saving
-    }, new Date())
   }
 }
 
