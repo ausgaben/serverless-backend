@@ -7,22 +7,43 @@ const {v4} = require('uuid')
  *
  * @param {EventStore} eventStore
  * @param {AggregateRelation} aggregateRelation
+ * @param {AggregateSortIndex} aggregateIndex
  * @constructor
  */
 class SpendingRepository extends AggregateRepository {
-  constructor (eventStore, aggregateRelation) {
+  constructor (eventStore, aggregateRelation, aggregateSortIndex) {
     super(SpendingModel, eventStore)
     this.relation = aggregateRelation
+    this.sortIndex = aggregateSortIndex
   }
 
   /**
    * @param {object} payload
    */
   add (payload) {
-    return super
-      .persistEvent(SpendingModel.create(payload, new AggregateMeta(v4(), 1)))
-      .then(event => this.relation.addRelatedId('checkingAccount', payload.checkingAccount, event.aggregateId)
+    return this.eventStore
+      .persist(SpendingModel.create(payload, new AggregateMeta(v4(), 1)))
+      .then(event => Promise
+        .all([
+          this.relation.addRelatedId('checkingAccount', payload.checkingAccount, event.aggregateId),
+          updateBookedIndex(this.sortIndex)(payload.checkingAccount, event.aggregateId, payload.bookedAt)
+        ])
         .then(() => event))
+  }
+
+  /**
+   * Updates a Spending
+   *
+   * @param {SpendingModel} spending
+   * @param {object} payload
+   * @return {Promise.<SpendingDeletedEvent>}
+   */
+  update (spending, payload) {
+    return this.eventStore
+      .persist(spending.update(payload))
+      .then(event => updateBookedIndex(this.sortIndex)(spending.checkingAccount, event.aggregateId, payload.bookedAt)
+        .then(() => event)
+      )
   }
 
   /**
@@ -31,16 +52,31 @@ class SpendingRepository extends AggregateRepository {
    * @param {SpendingModel} spending
    * @return {Promise.<SpendingDeletedEvent>}
    */
-  remove (spending) {
-    return super.remove(spending.meta.id, spending.meta.version)
-      .then(event => this.relation.removeRelatedId('checkingAccount', spending.checkingAccount, spending.meta.id)
+  delete (spending) {
+    return this.eventStore.persist(spending.delete())
+      .then(event => Promise
+        .all([
+          this.relation.removeRelatedId('checkingAccount', spending.checkingAccount, spending.meta.id),
+          updateBookedIndex(this.sortIndex)(spending.checkingAccount, event.aggregateId)
+        ])
         .then(() => event)
       )
   }
 
-  findIdsByCheckingAccountId (checkingAccountId) {
+  findIdsByCheckingAccountId (checkingAccountId, {from, to} = {}) {
     return this.relation.findByRelatedId('checkingAccount', checkingAccountId)
+      .then(ids => {
+        if (from) {
+          return this.sortIndex.find(`checkingAccount:${checkingAccountId}:bookedAt`, from, to)
+            .then(filteredIds => ids.filter(id => filteredIds.indexOf(id) >= 0).sort((id1, id2) => filteredIds.indexOf(id1) - filteredIds.indexOf(id2)))
+        }
+        return ids
+      })
   }
 }
+
+const updateBookedIndex = index => (checkingAccountId, aggregateId, bookedAt) => bookedAt
+  ? index.add(`checkingAccount:${checkingAccountId}:bookedAt`, aggregateId, bookedAt.toISOString())
+  : index.remove(`checkingAccount:${checkingAccountId}:bookedAt`, aggregateId)
 
 module.exports = {SpendingRepository}

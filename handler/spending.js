@@ -52,12 +52,13 @@ module.exports = {
           Object.assign({}, event.queryStringParameters, {checkingAccountId: event.pathParameters.id}),
           Joi.object().keys({
             checkingAccountId: NonEmptyString.required(),
+            q: NonEmptyString,
             offset: Joi.number().min(0)
           })
         ),
         authorize(event)
       ])
-      .then(([{checkingAccountId, offset}, user]) => service(context).findSpendings(user, checkingAccountId, new Pagination(offset)))
+      .then(([{checkingAccountId, q, offset}, user]) => service(context).findSpendings(user, checkingAccountId, q, new Pagination(offset)))
       .then(({items, total, itemsPerPage, offset}) => new List(items.map(presentSpending(relations(new URIValue(process.env.API_ENDPOINT)))), total, itemsPerPage, [], offset))
       .then(successHandler(callback))
       .catch(errorHandler(callback))

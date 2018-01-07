@@ -3,6 +3,7 @@
 const {AggregateRelation, EventStore} = require('@rheactorjs/event-store-dynamodb')
 const {CheckingAccountRepository} = require('../repository/checking-account')
 const {SpendingRepository} = require('../repository/spending')
+const {AggregateSortIndex} = require('../repository/aggregate-sort-index')
 const {AccessDeniedError} = require('@rheactorjs/errors')
 
 /**
@@ -19,7 +20,8 @@ class CheckingAccountService {
     )
     this.spendingRepo = new SpendingRepository(
       new EventStore('Spending', dynamoDB, eventsTable),
-      new AggregateRelation('Spending', dynamoDB, relationsTable)
+      new AggregateRelation('Spending', dynamoDB, relationsTable),
+      new AggregateSortIndex('Spending', dynamoDB, indexTable)
     )
   }
 
@@ -65,19 +67,20 @@ class CheckingAccountService {
 
   updateSpending (user, id, category, title, amount, booked, bookedAt, saving) {
     return this.getSpendingById(user, id)
-      .then(spending => this.spendingRepo.persistEvent(spending.update({
+      .then(spending => this.spendingRepo.update(spending, {
         category,
         title,
         amount,
         booked,
         bookedAt,
         saving
-      })))
+      }))
       .then(() => undefined)
   }
 
-  findSpendings (user, checkingAccountId, pagination) {
-    return this.spendingRepo.findIdsByCheckingAccountId(checkingAccountId)
+  findSpendings (user, checkingAccountId, query = '', pagination) {
+    const p = parseQuery(query)
+    return this.spendingRepo.findIdsByCheckingAccountId(checkingAccountId, {from: p.tokens.from, to: p.tokens.to})
       .then(spendingIds => {
         const total = spendingIds.length
         return Promise.all(pagination.splice(spendingIds).map(id => this.spendingRepo.getById(id)))
@@ -94,20 +97,21 @@ class CheckingAccountService {
 
   deleteSpendingById (user, id) {
     return this.getSpendingById(user, id)
-      .then(spending => this.spendingRepo.persistEvent(spending.delete()))
+      .then(spending => this.spendingRepo.delete(spending))
       .then(() => undefined)
   }
 }
 
 const parseQuery = str => {
   const tokens = (str.match(/[a-z-]+:("[^"]+"|[^ ]+)/g, str) || []).reduce((tokens, token) => {
-    const [k, v] = token.split(':', 2)
-    tokens[k] = v
+    const p = token.indexOf(':')
+    const k = token.substr(0, p)
+    tokens[k] = token.substr(p + 1)
     return tokens
   }, {})
   return {
     tokens,
-    text: Object.keys(tokens).reduce((str, token) => str.replace(`${token}:${tokens[token]}`, ''), str)
+    text: Object.keys(tokens).reduce((str, token) => str.replace(`${token}:${tokens[token]}`, ''), str).trim()
   }
 }
 

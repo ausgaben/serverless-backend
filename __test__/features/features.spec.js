@@ -76,8 +76,11 @@ const lambdaProxyEventReducer = (state = {
       return Object.assign({}, state, {httpMethod: action.method})
     case 'REQUEST_RESOURCE':
       return Object.assign({}, state, {
-        path: action.path.split('?')[0],
-        queryStringParameters: action.path.split('?')[1] || null
+        path: action.path
+      })
+    case 'REQUEST_QUERY':
+      return Object.assign({}, state, {
+        queryStringParameters: action.queryStringParameters
       })
     case 'REQUEST_BODY':
       return Object.assign({}, state, {body: JSON.stringify(action.body)})
@@ -193,6 +196,16 @@ class ServerlessContext {
       const uri = new URL(match[2], process.env.API_ENDPOINT)
       store.dispatch({type: 'REQUEST_METHOD', method: match[1]})
       store.dispatch({type: 'REQUEST_RESOURCE', path: uri.pathname})
+
+      const qsp = {}
+      for (let [key, value] of uri.searchParams.entries()) {
+        qsp[key] = value
+      }
+      if (Object.keys(qsp).length) {
+        store.dispatch({type: 'REQUEST_QUERY', queryStringParameters: qsp})
+      } else {
+        store.dispatch({type: 'REQUEST_QUERY', queryStringParameters: null})
+      }
       store.dispatch({
         type: 'REQUEST_BODY',
         body: argument ? JSON.parse(argument) : undefined
@@ -367,6 +380,17 @@ class ServerlessContext {
         })
     }
 
+    const responseListPositionalItemPropertyRx = /^"([^"]+)" of the ([0-9]+)[a-z]+ item should equal "([^"]+)"$/
+    if (responseListPositionalItemPropertyRx.test(step)) {
+      const match = step.match(responseListPositionalItemPropertyRx)
+      return Promise
+        .try(() => {
+          const item = store.getState().response.body.items[+match[2] - 1]
+          expect(item).toHaveProperty(match[1])
+          expect(item[match[1]]).toEqual(match[3])
+        })
+    }
+
     const userPropertyRx = /the token for this user is stored as "([^"]+)"/
     if (userPropertyRx.test(step)) {
       const match = step.match(userPropertyRx)
@@ -438,7 +462,7 @@ afterAll(() => {
     console.error(
       [
         chalk.red(`Failed step: ${steps.failedStep}`),
-        chalk.cyan(`Request: ${proxyEvent.httpMethod} ${proxyEvent.path}\n${Object.keys(proxyEvent.headers).map(header => `> ${header}: ${proxyEvent.headers[header]}`).join('\n')}\n\n> ${proxyEvent.body}`),
+        chalk.cyan(`Request: ${proxyEvent.httpMethod} ${proxyEvent.path}\nQuery: ${JSON.stringify(proxyEvent.queryStringParameters)}\n${Object.keys(proxyEvent.headers).map(header => `> ${header}: ${proxyEvent.headers[header]}`).join('\n')}\n\n> ${proxyEvent.body}`),
         chalk.blue(`Response: ${response.statusCode}\n${Object.keys(response.headers).map(header => `${header}: ${response.headers[header]}`).join('\n')}\n\n${JSON.stringify(response.body, null, 2)}`)
       ].join('\n')
     )
@@ -482,14 +506,14 @@ const runFeatures = () => Promise
                   ({text: step, argument, keyword}) => new Promise((resolve, reject) => {
                     // Replace Gherkin arguments in strings
                     const replaceArguments = str => Object.keys(dataset).reduce((str, key) => str.replace(new RegExp(
-  `<${key}>`
-, 'g'), dataset[key]), str)
+                      `<${key}>`
+                      , 'g'), dataset[key]), str)
 
                     // Replace {foo} storage placeholders
                     const storage = rootStore.getState().storage
                     const replacePlaceholders = str => Object.keys(storage).reduce((str, key) => str.replace(new RegExp(
-  `{${key}}`
-, 'g'), storage[key]), str)
+                      `{${key}}`
+                      , 'g'), storage[key]), str)
 
                     // Replace
                     // In step
@@ -511,8 +535,8 @@ const runFeatures = () => Promise
                         step: stepText
                       })
                       return reject(new Error(
-  `Unmatched step: ${stepText}!`
-))
+                        `Unmatched step: ${stepText}!`
+                      ))
                     }
                     p
                       .then(result => {

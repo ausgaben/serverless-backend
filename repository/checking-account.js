@@ -16,8 +16,8 @@ class CheckingAccountRepository extends AggregateRepository {
   }
 
   add (payload) {
-    return super
-      .persistEvent(CheckingAccountModel.create(payload, new AggregateMeta(v4(), 1)))
+    return this.eventStore
+      .persist(CheckingAccountModel.create(payload, new AggregateMeta(v4(), 1)))
       .then(event => Promise.all(payload.users.map(user => this.relation.addRelatedId('user', user, event.aggregateId)))
         .then(() => event)
       )

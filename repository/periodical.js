@@ -20,8 +20,8 @@ class PeriodicalRepository extends AggregateRepository {
    * @param {object} payload
    */
   add (payload) {
-    return super
-      .persistEvent(PeriodicalModel.create(payload, new AggregateMeta(v4(), 1)))
+    return this.eventStore
+      .persist(PeriodicalModel.create(payload, new AggregateMeta(v4(), 1)))
       .then(event => this.relation.addRelatedId('checkingAccount', payload.checkingAccount, event.aggregateId)
         .then(() => event)
       )
