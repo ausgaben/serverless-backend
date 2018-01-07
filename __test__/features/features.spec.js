@@ -531,10 +531,9 @@ const runFeatures = () => Promise
   })
 
 describe('Features', () => {
-  test('they should run', () => {
-    runFeatures()
-      .then(() => {
-        expect(rootStore.getState().steps.failed).toEqual(false)
-      })
-  })
+  test('they should run', () => runFeatures()
+    .then(() => {
+      expect(rootStore.getState().steps.failed).toEqual(false)
+    })
+  )
 })
