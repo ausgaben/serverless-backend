@@ -14,16 +14,18 @@ class CheckingAccountRepository extends AggregateRepository {
     this.relation = aggregateRelation
   }
 
-  async add ({name, user}) {
-    const event = await super.add({
-      name: NonEmptyString(name, ['CheckingAccountRepository', 'add()', 'name:String']),
-      users: [NonEmptyString(user, ['CheckingAccountRepository', 'add()', 'user:String'])]
-    })
-    await this.relation.addRelatedId('user', user, event.aggregateId)
-    return event
+  add ({name, user}) {
+    return super
+      .add({
+        name: NonEmptyString(name, ['CheckingAccountRepository', 'add()', 'name:String']),
+        users: [NonEmptyString(user, ['CheckingAccountRepository', 'add()', 'user:String'])]
+      })
+      .then(event => this.relation.addRelatedId('user', user, event.aggregateId)
+        .then(() => event)
+      )
   }
 
-  async findIdsByUser (user) {
+  findIdsByUser (user) {
     return this.relation.findByRelatedId('user', NonEmptyString(user, ['CheckingAccountRepository', 'findIdsByUser()', 'user:String']))
   }
 }

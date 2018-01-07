@@ -41,7 +41,7 @@ module.exports = {
           })),
         authorize(event)
       ])
-      .then(async ([{checkingAccountId, category, title, amount, booked, bookedAt, saving}, user]) => service(context).createSpending(user, checkingAccountId, category, title, amount, booked, bookedAt, saving))
+      .then(([{checkingAccountId, category, title, amount, booked, bookedAt, saving}, user]) => service(context).createSpending(user, checkingAccountId, category, title, amount, booked, bookedAt, saving))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
@@ -57,7 +57,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(async ([{checkingAccountId, offset}, user]) => service(context).findSpendings(user, checkingAccountId, new Pagination(offset)))
+      .then(([{checkingAccountId, offset}, user]) => service(context).findSpendings(user, checkingAccountId, new Pagination(offset)))
       .then(({items, total, itemsPerPage, offset}) => new List(items.map(presentSpending(relations(new URIValue(process.env.API_ENDPOINT)))), total, itemsPerPage, [], offset))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
@@ -73,7 +73,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(async ([{id}, user]) => service(context).getSpendingById(user, id))
+      .then(([{id}, user]) => service(context).getSpendingById(user, id))
       .then(({items: [checkingAccount]}) => presentSpending(relations(new URIValue(process.env.API_ENDPOINT)))(checkingAccount))
       .then(successHandler(callback))
       .catch(errorHandler(callback))

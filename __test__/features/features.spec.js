@@ -72,7 +72,10 @@ const lambdaProxyEventReducer = (state = {
     case 'REQUEST_METHOD':
       return Object.assign({}, state, {httpMethod: action.method})
     case 'REQUEST_RESOURCE':
-      return Object.assign({}, state, {path: action.path.split('?')[0], queryStringParameters: action.path.split('?')[1] || null})
+      return Object.assign({}, state, {
+        path: action.path.split('?')[0],
+        queryStringParameters: action.path.split('?')[1] || null
+      })
     case 'REQUEST_BODY':
       return Object.assign({}, state, {body: JSON.stringify(action.body)})
     default:
@@ -425,113 +428,113 @@ const Gherkin = require('gherkin')
 const parser = new Gherkin.Parser(new Gherkin.AstBuilder())
 const matcher = new Gherkin.TokenMatcher()
 
-const runFeatures = async () => {
-  const featureFiles = await glob('./features/*.feature')
-  const featureSources = await Promise.all(featureFiles.map(file => readFile(file)))
-  // Parse the feature files
-  const parsedFeatures = featureSources.map(featureData => {
+const runFeatures = () => Promise
+  .map(glob('./features/*.feature'), file => readFile(file))
+  .map(featureData => { // Parse the feature files
     const scanner = new Gherkin.TokenScanner(featureData.toString())
     return parser.parse(scanner, matcher).feature
   })
+  .then(parsedFeatures => {
+    // Sort the features by @After annotation using toposort
+    const featureDependencies = parsedFeatures.map(feature => {
+      const afterTag = feature.tags.find(({name}) => /^@After:/.test(name))
+      if (afterTag) {
+        return [afterTag.name.split(':')[1], feature.name]
+      }
+      return [feature.name, false]
+    })
+    const sortedFeatureNames = toposort(featureDependencies).filter(feature => feature)
 
-  // Sort the features by @After annotation using toposort
-  const featureDependencies = parsedFeatures.map(feature => {
-    const afterTag = feature.tags.find(({name}) => /^@After:/.test(name))
-    if (afterTag) {
-      return [afterTag.name.split(':')[1], feature.name]
-    }
-    return [feature.name, false]
-  })
-  const sortedFeatureNames = toposort(featureDependencies).filter(feature => feature)
+    // Now run the features in the right order
+    const sortedFeatures = sortedFeatureNames.map(featureName => parsedFeatures.find(({name}) => name === featureName))
 
-  // Now run the features in the right order
-  const sortedFeatures = sortedFeatureNames.map(featureName => parsedFeatures.find(({name}) => name === featureName))
+    return Promise
+      .mapSeries(
+        sortedFeatures,
+        feature => Promise
+          .mapSeries(
+            feature.children,
+            scenario => {
+              const runScenario = (type, name, steps, dataset = {}) => Promise
+                .mapSeries(
+                  steps,
+                  ({text: step, argument, keyword}) => new Promise((resolve, reject) => {
+                    // Replace Gherkin arguments in strings
+                    const replaceArguments = str => Object.keys(dataset).reduce((str, key) => str.replace(new RegExp(`<${key}>`, 'g'), dataset[key]), str)
 
-  await Promise
-    .mapSeries(
-      sortedFeatures,
-      feature => Promise
-        .mapSeries(
-          feature.children,
-          scenario => {
-            const runScenario = (type, name, steps, dataset = {}) => Promise
-              .mapSeries(
-                steps,
-                ({text: step, argument, keyword}) => new Promise((resolve, reject) => {
-                  // Replace Gherkin arguments in strings
-                  const replaceArguments = str => Object.keys(dataset).reduce((str, key) => str.replace(new RegExp(`<${key}>`, 'g'), dataset[key]), str)
+                    // Replace {foo} storage placeholders
+                    const storage = rootStore.getState().storage
+                    const replacePlaceholders = str => Object.keys(storage).reduce((str, key) => str.replace(new RegExp(`{${key}}`, 'g'), storage[key]), str)
 
-                  // Replace {foo} storage placeholders
-                  const storage = rootStore.getState().storage
-                  const replacePlaceholders = str => Object.keys(storage).reduce((str, key) => str.replace(new RegExp(`{${key}}`, 'g'), storage[key]), str)
+                    // Replace
+                    // In step
+                    const stepText = replacePlaceholders(replaceArguments(step.trim()))
+                    // in argument
+                    const arg = argument ? replacePlaceholders(replaceArguments(argument.content)) : undefined
 
-                  // Replace
-                  // In step
-                  const stepText = replacePlaceholders(replaceArguments(step.trim()))
-                  // in argument
-                  const arg = argument ? replacePlaceholders(replaceArguments(argument.content)) : undefined
-
-                  rootStore.dispatch({
-                    type: 'STEP',
-                    step: stepText,
-                    argument: arg,
-                    keyword: keyword.trim().toLowerCase()
-                  })
-
-                  const p = ctx.step(rootStore, stepText, arg)
-                  if (!p || !p.then) {
                     rootStore.dispatch({
-                      type: 'STEP_FAILED',
-                      step: stepText
+                      type: 'STEP',
+                      step: stepText,
+                      argument: arg,
+                      keyword: keyword.trim().toLowerCase()
                     })
-                    return reject(new Error(`Unmatched step: ${stepText}!`))
-                  }
-                  p
-                    .then(result => {
-                      rootStore.dispatch({
-                        type: 'STEP_SUCCESS',
-                        step: stepText,
-                        result
-                      })
-                      resolve(result)
-                    })
-                    .catch(err => {
+
+                    const p = ctx.step(rootStore, stepText, arg)
+                    if (!p || !p.then) {
                       rootStore.dispatch({
                         type: 'STEP_FAILED',
-                        step: stepText,
-                        error: err
+                        step: stepText
                       })
-                      return reject(err)
-                    })
-                })
-              )
+                      return reject(new Error(`Unmatched step: ${stepText}!`))
+                    }
+                    p
+                      .then(result => {
+                        rootStore.dispatch({
+                          type: 'STEP_SUCCESS',
+                          step: stepText,
+                          result
+                        })
+                        resolve(result)
+                      })
+                      .catch(err => {
+                        rootStore.dispatch({
+                          type: 'STEP_FAILED',
+                          step: stepText,
+                          error: err
+                        })
+                        return reject(err)
+                      })
+                  })
+                )
 
-            if (scenario.type === 'ScenarioOutline') {
-              // Execute the scenario for every provided example dataset
-              const examples = scenario.examples
-                .find(({type}) => type === 'Examples')
-              const tableBody = examples.tableBody.filter(({type}) => type === 'TableRow')
+              if (scenario.type === 'ScenarioOutline') {
+                // Execute the scenario for every provided example dataset
+                const examples = scenario.examples
+                  .find(({type}) => type === 'Examples')
+                const tableBody = examples.tableBody.filter(({type}) => type === 'TableRow')
 
-              const exampleDatasets = tableBody.map(({cells}) => cells.reduce((dataset, {value}, idx) => {
-                dataset[examples.tableHeader.cells[idx].value] = value
-                return dataset
-              }, {}))
+                const exampleDatasets = tableBody.map(({cells}) => cells.reduce((dataset, {value}, idx) => {
+                  dataset[examples.tableHeader.cells[idx].value] = value
+                  return dataset
+                }, {}))
 
-              return Promise.mapSeries(
-                exampleDatasets,
-                dataset => runScenario(scenario.type, scenario.name, scenario.steps, dataset)
-              )
-            } else {
-              return runScenario(scenario.type, scenario.name, scenario.steps)
+                return Promise.mapSeries(
+                  exampleDatasets,
+                  dataset => runScenario(scenario.type, scenario.name, scenario.steps, dataset)
+                )
+              } else {
+                return runScenario(scenario.type, scenario.name, scenario.steps)
+              }
             }
-          }
-        )
-    )
-}
+          )
+      )
+  })
 
 describe('Features', () => {
-  test('they should run', async () => {
-    await runFeatures()
-    expect(rootStore.getState().steps.failed).toEqual(false)
+  test('they should run', () => {
+    runFeatures()
+      .then(() => {
+        expect(rootStore.getState().steps.failed).toEqual(false)
+      })
   })
 })
