@@ -2,16 +2,17 @@
 
 const {CheckingAccountRepository} = require('../../repository/checking-account')
 const Promise = require('bluebird')
-const {ModelEvent, EventStore} = require('@rheactorjs/event-store-dynamodb')
+const {ModelEvent, AggregateRelation, EventStore} = require('@rheactorjs/event-store-dynamodb')
 const {dynamoDB, close} = require('@rheactorjs/event-store-dynamodb/test/helper')
 
 describe('CheckingAccountRepository', () => {
   let checkingAccountRepo
 
   beforeAll(() => dynamoDB()
-    .spread((dynamoDB, eventsTable) => {
+    .spread((dynamoDB, eventsTable, relationsTable) => {
       checkingAccountRepo = new CheckingAccountRepository(
-        new EventStore('CheckingAccount', dynamoDB, eventsTable)
+        new EventStore('CheckingAccount', dynamoDB, eventsTable),
+        new AggregateRelation('CheckingAccount', dynamoDB, relationsTable)
       )
     }))
 
@@ -20,8 +21,8 @@ describe('CheckingAccountRepository', () => {
   it('should persist', (done) => {
     Promise
       .join(
-        checkingAccountRepo.add({name: 'CheckingAccount 1', users: ['foo']}),
-        checkingAccountRepo.add({name: 'CheckingAccount 2', users: ['bar']})
+        checkingAccountRepo.add({name: 'CheckingAccount 1', user: 'foo'}),
+        checkingAccountRepo.add({name: 'CheckingAccount 2', user: 'bar'})
       )
       .spread((event1, event2) => {
         expect(event1).toBeInstanceOf(ModelEvent)
