@@ -1,0 +1,13 @@
+engines:
+  fixme:
+    enabled: true
+  duplication:
+    enabled: false
+ratings:
+  paths:
+  - "command/**.js"
+  - "handler/**.js"
+  - "model/**.js"
+  - "repository/**.js"
+  - "service/**.js"
+  - "util/**.js"
