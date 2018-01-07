@@ -17,7 +17,7 @@ class SpendingRepository extends AggregateRepository {
   /**
    * @param {SpendingModel} spending
    */
-  add (spending) {
+  async add (spending) {
     const payload = {
       checkingAccount: spending.checkingAccount,
       author: spending.author,
@@ -30,10 +30,9 @@ class SpendingRepository extends AggregateRepository {
     if (spending.bookedAt) {
       payload.bookedAt = spending.bookedAt
     }
-    return super.add(payload)
-      .then(event => this.relation.addRelatedId('checkingAccount', payload.checkingAccount, event.aggregateId)
-        .then(() => event)
-      )
+    const event = await super.add(payload)
+    await this.relation.addRelatedId('checkingAccount', payload.checkingAccount, event.aggregateId)
+    return event
   }
 
   /**
@@ -50,8 +49,8 @@ class SpendingRepository extends AggregateRepository {
       )
   }
 
-  findByCheckingAccountId (checkingAccountId) {
-    return this.relation.findByRelatedId('checkingAccount', checkingAccountId).map(this.getById.bind(this))
+  findIdsByCheckingAccountId (checkingAccountId) {
+    return this.relation.findByRelatedId('checkingAccount', checkingAccountId)
   }
 }
 

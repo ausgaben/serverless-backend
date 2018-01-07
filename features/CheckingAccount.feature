@@ -24,7 +24,7 @@ Feature: CheckingAccount
     Then the status code should be 200
     And the Content-Type header should equal "application/vnd.ausgaben.v1+json; charset=utf-8"
     And a list of "https://github.com/ausgaben/ausgaben-rheactor/wiki/JsonLD#CheckingAccount" with 1 of 1 item should be returned
-    And I store "$id" of the 1st item as "createdCheckingAccount"
+    And I store "$id" of the item matching name:"My first checking account" as "createdCheckingAccount"
 
   Scenario: Fetch the created account
 

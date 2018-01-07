@@ -33,9 +33,7 @@ module.exports = {
           })),
         authorize(event)
       ])
-      .then(async ([data, user]) => {
-        await service(context).create(data.name, user)
-      })
+      .then(async ([data, user]) => service(context).create(data.name, user))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
@@ -50,7 +48,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(async ([{offset}, user]) => service(context).findByUser(user, '', new Pagination(offset)))
+      .then(async ([{offset}, user]) => service(context).find(user, '', new Pagination(offset)))
       .then(({items, total, itemsPerPage, offset}) => new List(items.map(presentCheckingAccount(relations(new URIValue(process.env.API_ENDPOINT)))), total, itemsPerPage, [], offset))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
@@ -66,8 +64,8 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(async ([{id}, user]) => service(context).findByUser(user, `id:${id}`, new Pagination(0, 1)))
-      .then(({items}) => presentCheckingAccount(relations(new URIValue(process.env.API_ENDPOINT)))(items[0]))
+      .then(async ([{id}, user]) => service(context).getById(user, id))
+      .then(checkingAccount => presentCheckingAccount(relations(new URIValue(process.env.API_ENDPOINT)))(checkingAccount))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   }

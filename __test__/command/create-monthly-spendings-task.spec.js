@@ -64,7 +64,7 @@ describe('CreateMonthlySpendingsCommand', () => {
     Promise
       .map(periodicals, (periodical) => periodicalRepo.add(periodical))
       .then(() => task.execute(month))
-      .then(() => spendingRepo.findByCheckingAccountId('4242'))
+      .then(() => spendingRepo.findIdsByCheckingAccountId('4242'))
       .then(spendings => {
         expect(spendings).toHaveLength(2)
         done()

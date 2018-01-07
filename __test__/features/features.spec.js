@@ -112,13 +112,12 @@ const userRepo = {
 const apiHandler = require('../../handler/api')
 const userHandler = require('../../handler/user')
 const checkingAccountHandler = require('../../handler/checkingAccount')
+const spendingHandler = require('../../handler/spending')
 const endpoints = [
   {path: new RegExp(`GET /api`), handler: apiHandler.api},
   {
     path: /^POST \/me$/,
-    handler: (event, context, callback) => {
-      userHandler.me({...event}, {...context, userRepo}, callback)
-    }
+    handler: userHandler.me
   },
   {
     path: /^POST \/checking-account$/,
@@ -131,10 +130,19 @@ const endpoints = [
   {
     path: /^GET \/checking-account\/(.+)$/,
     handler: (event, context, callback) => {
-      checkingAccountHandler.get({...event, pathParameters: {id: event.path.split('/').pop()}}, {
-        ...context,
-        userRepo
-      }, callback)
+      checkingAccountHandler.get({...event, pathParameters: {id: event.path.split('/').pop()}}, context, callback)
+    }
+  },
+  {
+    path: /^POST \/checking-account\/([^/]+)\/spending$/,
+    handler: (event, context, callback) => {
+      spendingHandler.create({...event, pathParameters: {id: event.path.split('/')[2]}}, context, callback)
+    }
+  },
+  {
+    path: /^POST \/checking-account\/([^/]+)\/spending\/search$/,
+    handler: (event, context, callback) => {
+      spendingHandler.search({...event, pathParameters: {id: event.path.split('/')[2]}}, context, callback)
     }
   }
 ]
@@ -203,7 +211,7 @@ class ServerlessContext {
       return Promise.try(() => expect(store.getState().response.body).toMatchObject({[match[1]]: match[2] === 'true'}))
     }
 
-    const responseIntegerPropertyTestRx = /^"([^"]+)" should equal ([0-9]+)$/
+    const responseIntegerPropertyTestRx = /^"([^"]+)" should equal (-?[0-9]+)$/
     if (responseIntegerPropertyTestRx.test(step)) {
       const match = step.match(responseIntegerPropertyTestRx)
       return Promise.try(() => expect(store.getState().response.body).toMatchObject({[match[1]]: +match[2]}))
@@ -283,18 +291,51 @@ class ServerlessContext {
         })
     }
 
-    const storePropertyOfListItemRx = /^I store "([^"]+)" of the ([0-9]+)[a-z]+ item as "([^"]+)"/
+    const storePropertyOfListItemRx = /^I store "([^"]+)" of the item matching ([^ ]+):"([^"]+)" as "([^"]+)"/
     if (storePropertyOfListItemRx.test(step)) {
       const match = step.match(storePropertyOfListItemRx)
       return Promise
         .try(() => {
-          const item = store.getState().response.body.items[(+match[2]) - 1]
+          const item = store.getState().response.body.items.find(item => item[match[2]] === match[3])
           expect(item).toHaveProperty(match[1])
           store.dispatch({
             type: 'STORE',
             value: item[match[1]],
-            key: match[3]
+            key: match[4]
           })
+        })
+    }
+
+    const responseListItemPropertyRx = /^"([^"]+)" of the item matching ([^ ]+):"([^"]+)" should equal "([^"]+)"$/
+    if (responseListItemPropertyRx.test(step)) {
+      const match = step.match(responseListItemPropertyRx)
+      return Promise
+        .try(() => {
+          const item = store.getState().response.body.items.find(item => item[match[2]] === match[3])
+          expect(item).toHaveProperty(match[1])
+          expect(item[match[1]]).toEqual(match[4])
+        })
+    }
+
+    const responseListItemIntegerPropertyRx = /^"([^"]+)" of the item matching ([^ ]+):"([^"]+)" should equal (-?[0-9]+)$/
+    if (responseListItemIntegerPropertyRx.test(step)) {
+      const match = step.match(responseListItemIntegerPropertyRx)
+      return Promise
+        .try(() => {
+          const item = store.getState().response.body.items.find(item => item[match[2]] === match[3])
+          expect(item).toHaveProperty(match[1])
+          expect(item[match[1]]).toEqual(+match[4])
+        })
+    }
+
+    const responseListItemBooleanPropertyRx = /^"([^"]+)" of the item matching ([^ ]+):"([^"]+)" should equal (true|false)$/
+    if (responseListItemBooleanPropertyRx.test(step)) {
+      const match = step.match(responseListItemBooleanPropertyRx)
+      return Promise
+        .try(() => {
+          const item = store.getState().response.body.items.find(item => item[match[2]] === match[3])
+          expect(item).toHaveProperty(match[1])
+          expect(item[match[1]]).toEqual(match[4] === 'true')
         })
     }
 
@@ -414,11 +455,11 @@ const runFeatures = async () => {
                 steps,
                 ({text: step, argument, keyword}) => new Promise((resolve, reject) => {
                   // Replace Gherkin arguments in strings
-                  const replaceArguments = str => Object.keys(dataset).reduce((str, key) => str.replace(`<${key}>`, dataset[key]), str)
+                  const replaceArguments = str => Object.keys(dataset).reduce((str, key) => str.replace(new RegExp(`<${key}>`, 'g'), dataset[key]), str)
 
                   // Replace {foo} storage placeholders
                   const storage = rootStore.getState().storage
-                  const replacePlaceholders = str => Object.keys(storage).reduce((str, key) => str.replace(`{${key}}`, storage[key]), str)
+                  const replacePlaceholders = str => Object.keys(storage).reduce((str, key) => str.replace(new RegExp(`{${key}}`, 'g'), storage[key]), str)
 
                   // Replace
                   // In step

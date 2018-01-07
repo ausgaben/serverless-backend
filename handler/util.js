@@ -13,7 +13,9 @@ const checkingAccountService = context => new CheckingAccountService(
 )
 
 const NonEmptyString = Joi.string().min(1).required().trim()
-const OptionalTruthyDefaultFalse = Joi.boolean().default(false).falsy([0, '0']).truthy([1, '1'])
+const Truthy = Joi.boolean().falsy([0, '0']).truthy([1, '1'])
+const TruthyDefaultFalse = Truthy.default(false)
+const Integer = Joi.number().integer().required()
 const validate = (data, schema) => {
   const result = Joi.validate(data || {}, schema)
   if (result.error) {
@@ -30,6 +32,8 @@ module.exports = {
   joi: {
     validate,
     NonEmptyString,
-    OptionalTruthyDefaultFalse
+    TruthyDefaultFalse,
+    Truthy,
+    Integer
   }
 }
