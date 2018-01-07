@@ -20,19 +20,23 @@ const app = {}
 const stepReducer = (state = {stepCount: 0, failed: false}, {type, step, argument, keyword}) => {
   switch (type) {
     case 'STEP':
-      return {
-        ...state,
-        stepCount: state.stepCount + 1,
-        step,
-        argument,
-        keyword: keyword === 'and' ? state.keyword : keyword
-      }
+      return Object.assign(
+        {},
+        state,
+        {
+          stepCount: state.stepCount + 1,
+          step,
+          argument,
+          keyword: keyword === 'and' ? state.keyword : keyword
+        })
     case 'STEP_FAILED':
-      return {
-        ...state,
-        failedStep: step,
-        failed: true
-      }
+      return Object.assign(
+        {},
+        state,
+        {
+          failedStep: step,
+          failed: true
+        })
     default:
       return state
   }
@@ -53,21 +57,24 @@ const lambdaProxyEventReducer = (state = {
 }, action) => {
   switch (action.type) {
     case 'REQUEST_HEADER':
-      return {
-        ...state,
-        headers: {...state.headers, [action.name]: action.value},
-        requestContext: {
-          authorizer: {
-            claims: action.name === 'Authorization' ? jwt.verify(action.value.match('Bearer (.+)')[1], 'secret') : undefined
+      return Object.assign(
+        {},
+        state,
+        {
+          headers: Object.assign({}, state.headers, {[action.name]: action.value}),
+          requestContext: {
+            authorizer: {
+              claims: action.name === 'Authorization' ? jwt.verify(action.value.match('Bearer (.+)')[1], 'secret') : undefined
+            }
           }
         }
-      }
+      )
     case 'REQUEST_METHOD':
-      return {...state, httpMethod: action.method}
+      return Object.assign({}, state, {httpMethod: action.method})
     case 'REQUEST_RESOURCE':
-      return {...state, path: action.path.split('?')[0], queryStringParameters: action.path.split('?')[1] || null}
+      return Object.assign({}, state, {path: action.path.split('?')[0], queryStringParameters: action.path.split('?')[1] || null})
     case 'REQUEST_BODY':
-      return {...state, body: JSON.stringify(action.body)}
+      return Object.assign({}, state, {body: JSON.stringify(action.body)})
     default:
       return state
   }
@@ -94,10 +101,7 @@ const lambdaResponseReducer = (state = defaultResponseState, action) => {
 const storageReducer = (state = {}, action) => {
   switch (action.type) {
     case 'STORE':
-      return {
-        ...state,
-        [action.key]: action.value
-      }
+      return Object.assign({}, state, {[action.key]: action.value})
     default:
       return state
   }
@@ -130,19 +134,19 @@ const endpoints = [
   {
     path: /^GET \/checking-account\/(.+)$/,
     handler: (event, context, callback) => {
-      checkingAccountHandler.get({...event, pathParameters: {id: event.path.split('/').pop()}}, context, callback)
+      checkingAccountHandler.get(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)
     }
   },
   {
     path: /^POST \/checking-account\/([^/]+)\/spending$/,
     handler: (event, context, callback) => {
-      spendingHandler.create({...event, pathParameters: {id: event.path.split('/')[2]}}, context, callback)
+      spendingHandler.create(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
     }
   },
   {
     path: /^POST \/checking-account\/([^/]+)\/spending\/search$/,
     handler: (event, context, callback) => {
-      spendingHandler.search({...event, pathParameters: {id: event.path.split('/')[2]}}, context, callback)
+      spendingHandler.search(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
     }
   }
 ]

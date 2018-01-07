@@ -36,10 +36,7 @@ module.exports = {
   successHandler: callback => (body, headers = {}, statusCodeWithBody = 200) => {
     callback(null, {
       statusCode: body ? statusCodeWithBody : 202,
-      headers: {
-        ...headers,
-        ...h(body)
-      },
+      headers: Object.assign({}, headers, h(body)),
       body: body !== undefined ? JSON.stringify(body) : undefined
     })
   }

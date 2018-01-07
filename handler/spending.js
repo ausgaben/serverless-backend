@@ -29,10 +29,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          {
-            ...JSON.parse(event.body),
-            checkingAccountId: event.pathParameters.id
-          },
+          Object.assign({}, JSON.parse(event.body), {checkingAccountId: event.pathParameters.id}),
           Joi.object().keys({
             checkingAccountId: NonEmptyString,
             category: NonEmptyString,
@@ -52,10 +49,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          {
-            ...event.queryStringParameters,
-            checkingAccountId: event.pathParameters.id
-          },
+          Object.assign({}, event.queryStringParameters, {checkingAccountId: event.pathParameters.id}),
           Joi.object().keys({
             checkingAccountId: NonEmptyString,
             offset: Joi.number().min(0)
