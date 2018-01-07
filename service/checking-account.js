@@ -5,6 +5,7 @@ const {CheckingAccountRepository} = require('../repository/checking-account')
 const {SpendingRepository} = require('../repository/spending')
 const {AggregateSortIndex} = require('../repository/aggregate-sort-index')
 const {AccessDeniedError} = require('@rheactorjs/errors')
+const {ReportModel} = require('../model/report')
 
 /**
  * Creates a new CheckingAccount service
@@ -99,6 +100,28 @@ class CheckingAccountService {
     return this.getSpendingById(user, id)
       .then(spending => this.spendingRepo.delete(spending))
       .then(() => undefined)
+  }
+
+  getReport (user, id, query = '') {
+    const p = parseQuery(query)
+    return this.getById(user, id)
+      .then(checkingAccount => this.spendingRepo.findIdsByCheckingAccountId(checkingAccount.meta.id, {from: p.tokens.from, to: p.tokens.to})
+        .map(id => this.spendingRepo.getById(id))
+        .filter(({booked}) => booked)
+        .reduce((report, spending) => {
+          report.balance += spending.amount
+          if (spending.amount >= 0) {
+            report.income += spending.amount
+          } else {
+            if (spending.saving) {
+              report.savings += spending.amount
+            } else {
+              report.spendings += spending.amount
+            }
+          }
+          return report
+        }, new ReportModel(checkingAccount.meta.id))
+      )
   }
 }
 

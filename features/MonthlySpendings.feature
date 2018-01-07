@@ -39,6 +39,17 @@ Feature: Monthly Spendings
     And "title" of the 1st item should equal "Cat food December"
     And "title" of the 2nd item should equal "Dog food December"
 
+  Scenario: Fetch summary for the account
+
+    When I POST to {createdCheckingAccountReport}?q=from%3A2014-12-01T00%3A00%3A00.000Z%20to%3A2014-12-31T23%3A59%3A59.999Z
+    Then the status code should be 200
+    And the Content-Type header should equal "application/vnd.ausgaben.v1+json; charset=utf-8"
+    And "$context" should equal "https://github.com/ausgaben/ausgaben-rheactor/wiki/JsonLD#Report"
+    Then "spendings" should equal -24197
+    Then "income" should equal 5555
+    Then "balance" should equal -18642
+    Then "savings" should equal 0
+
 # Scenario: Change the monthly flag on an account
 
 #   When I GET {createdCheckingAccount}

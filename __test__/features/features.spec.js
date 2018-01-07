@@ -126,6 +126,7 @@ const apiHandler = require('../../handler/api')
 const userHandler = require('../../handler/user')
 const checkingAccountHandler = require('../../handler/checkingAccount')
 const spendingHandler = require('../../handler/spending')
+const reportHandler = require('../../handler/report')
 const endpoints = [
   {path: new RegExp(`GET /api`), handler: apiHandler.api},
   {
@@ -174,6 +175,12 @@ const endpoints = [
     path: /^DELETE \/spending\/(.+)$/,
     handler: (event, context, callback) => {
       spendingHandler.delete(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)
+    }
+  },
+  {
+    path: /^POST \/checking-account\/([^/]+)\/report$/,
+    handler: (event, context, callback) => {
+      reportHandler.get(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
     }
   }
 ]

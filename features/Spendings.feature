@@ -44,6 +44,17 @@ Feature: Spendings
       | Salary   | Tanja's Salary | 4321   | false  | 2015-01-04T00:00:00.000Z | false  | 4        | tanjasSalary |
       | Savings  | Pension Fund   | -326   | true   | 2015-01-04T00:00:00.000Z | true   | 5        | pensionFund  |
 
+  Scenario: Fetch summary for the account
+
+    When I POST to {createdCheckingAccountReport}
+    Then the status code should be 200
+    And the Content-Type header should equal "application/vnd.ausgaben.v1+json; charset=utf-8"
+    And "$context" should equal "https://github.com/ausgaben/ausgaben-rheactor/wiki/JsonLD#Report"
+    Then "spendings" should equal -18023
+    Then "income" should equal 23456
+    Then "savings" should equal -326
+    Then "balance" should equal 5107
+
   Scenario: Update spending
 
     Given "1" is the If-Match header
@@ -60,6 +71,13 @@ Feature: Spendings
     And "title" should equal "Tanja's Salary for April 2015"
     And "booked" should equal true
     And "amount" should equal 4321
+    # Report should be updated
+    When I POST to {createdCheckingAccountReport}
+    Then the status code should be 200
+    Then "spendings" should equal -18023
+    Then "income" should equal 27777
+    Then "savings" should equal -326
+    Then "balance" should equal 9428
 
   Scenario: Delete spending
 
@@ -69,3 +87,10 @@ Feature: Spendings
     # Spending should be deleted
     When I GET {dogFoodSpending}
     Then the status code should be 404
+    # Report should be updated
+    When I POST to {createdCheckingAccountReport}
+    Then the status code should be 200
+    Then "spendings" should equal -12345
+    Then "income" should equal 27777
+    Then "savings" should equal -326
+    Then "balance" should equal 15106
