@@ -1,6 +1,6 @@
-const {ValidationFailedError, UnhandledDomainEventError} = require('@rheactorjs/errors')
+const {UnhandledDomainEventError} = require('@rheactorjs/errors')
 const {AggregateRoot, ModelEvent, AggregateMeta, NonEmptyString} = require('@rheactorjs/event-store-dynamodb')
-const {CheckingAccountPropertyChangedEvent, CheckingAccountCreatedEvent} = require('./events')
+const {CheckingAccountUpdatedEvent, CheckingAccountCreatedEvent} = require('./events')
 const {Boolean: BooleanType} = require('tcomb')
 const t = require('tcomb')
 const NonEmptyListOfNonEmptyStrings = t.refinement(t.list(NonEmptyString), l => l.length > 0, 'NonEmptyListOfNonEmptyStrings')
@@ -45,6 +45,24 @@ class CheckingAccountModel extends AggregateRoot {
   }
 
   /**
+   * @param {Object} payload
+   * @returns {ModelEvent}
+   */
+  update ({name, users, monthly, savings}) {
+    const s = [].concat.bind(['CheckingAccountModel', 'update()'])
+    return new ModelEvent(
+      this.meta.id,
+      this.meta.version + 1,
+      CheckingAccountUpdatedEvent,
+      {
+        name: name !== undefined ? NonEmptyString(name, s('name:String')) : this.name,
+        users: users !== undefined ? NonEmptyListOfNonEmptyStrings(users, s('users:String[]')) : this.users,
+        monthly: monthly !== undefined ? BooleanType(monthly, s('monthly:Boolean')) : this.monthly,
+        savings: savings !== undefined ? BooleanType(savings, s('savings:Boolean')) : this.savings
+      })
+  }
+
+  /**
    * Applies the event
    *
    * @param {ModelEvent} event
@@ -53,50 +71,19 @@ class CheckingAccountModel extends AggregateRoot {
    * @throws UnhandledDomainEventError
    */
   static applyEvent (event, checkingAccount) {
-    const {payload: {name, users, monthly, savings, property, value}, createdAt, aggregateId} = event
+    const {payload: {name, users, monthly, savings}, createdAt, aggregateId} = event
     switch (event.name) {
       case CheckingAccountCreatedEvent:
         return new CheckingAccountModel(name, users, monthly, savings, new AggregateMeta(aggregateId, 1, createdAt))
-      case CheckingAccountPropertyChangedEvent:
+      case CheckingAccountUpdatedEvent:
         const d = {
-          name: checkingAccount.name,
-          users: checkingAccount.users,
-          monthly: checkingAccount.monthly,
-          savings: checkingAccount.savings
+          name, users, monthly, savings
         }
-        d[property] = value
         return new CheckingAccountModel(d.name, d.users, d.monthly, d.savings, checkingAccount.meta.updated(createdAt))
+
       default:
         throw new UnhandledDomainEventError(event.name)
     }
-  }
-
-  /**
-   * @param  {boolean} monthly
-   * @returns {ModelEvent}
-   * @throws ValidationFailedError
-   * @throws TypeError
-   */
-  setMonthly (monthly = false) {
-    BooleanType(monthly, ['CheckingAccountModel.setMonthly()', 'monthly:Boolean'])
-    if (this.monthly === monthly) {
-      throw new ValidationFailedError('Monthly unchanged', monthly)
-    }
-    return new ModelEvent(this.meta.id, CheckingAccountPropertyChangedEvent, {property: 'monthly', value: monthly})
-  }
-
-  /**
-   * @param  {boolean} savings
-   * @returns {ModelEvent}
-   * @throws ValidationFailedError
-   * @throws TypeError
-   */
-  setSavings (savings = false) {
-    BooleanType(savings, ['CheckingAccountModel.setSavings()', 'savings:Boolean'])
-    if (this.savings === savings) {
-      throw new ValidationFailedError('Savings unchanged', savings)
-    }
-    return new ModelEvent(this.meta.id, CheckingAccountPropertyChangedEvent, {property: 'savings', value: savings})
   }
 }
 

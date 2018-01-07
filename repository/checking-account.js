@@ -15,12 +15,28 @@ class CheckingAccountRepository extends AggregateRepository {
     this.relation = aggregateRelation
   }
 
+  /**
+   * @param {object} payload
+   * @return {Promise.<CheckingAccountCreatedEvent>}
+   */
   add (payload) {
     return this.eventStore
       .persist(CheckingAccountModel.create(payload, new AggregateMeta(v4(), 1)))
       .then(event => Promise.all(payload.users.map(user => this.relation.addRelatedId('user', user, event.aggregateId)))
         .then(() => event)
       )
+  }
+
+  /**
+   * Updates a CheckingAccount
+   *
+   * @param {CheckingAccountModel} checkingAccount
+   * @param {object} payload
+   * @return {Promise.<CheckingAccountUpdatedEvent>}
+   */
+  update (checkingAccount, payload) {
+    return this.eventStore
+      .persist(checkingAccount.update(payload))
   }
 
   findIdsByUser (user) {

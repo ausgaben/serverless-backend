@@ -83,7 +83,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          Object.assign({}, JSON.parse(event.body), event.pathParameters),
+          Object.assign({}, JSON.parse(event.body), event.pathParameters, {version: event.headers['If-Match']}),
           Joi.object().keys({
             id: NonEmptyString.required(),
             category: NonEmptyString,
@@ -91,12 +91,13 @@ module.exports = {
             amount: Integer,
             booked: Boolean,
             bookedAt: Joi.date(),
-            saving: Boolean
+            saving: Boolean,
+            version: Integer.required()
           })
         ),
         authorize(event)
       ])
-      .then(([{id, category, title, amount, booked, bookedAt, saving}, user]) => service(context).updateSpending(user, id, category, title, amount, booked, bookedAt, saving))
+      .then(([{id, category, title, amount, booked, bookedAt, saving, version}, user]) => service(context).updateSpending(user, id, version, category, title, amount, booked, bookedAt, saving))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },

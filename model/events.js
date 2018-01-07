@@ -1,6 +1,5 @@
 const CheckingAccountCreatedEvent = 'CheckingAccountCreatedEvent'
-const CheckingAccountPropertyChangedEvent = 'CheckingAccountPropertyChangedEvent'
-const CheckingAccountUserCreatedEvent = 'CheckingAccountUserCreatedEvent'
+const CheckingAccountUpdatedEvent = 'CheckingAccountUpdatedEvent'
 const PeriodicalCreatedEvent = 'PeriodicalCreatedEvent'
 const SpendingCreatedEvent = 'SpendingCreatedEvent'
 const SpendingDeletedEvent = 'SpendingDeletedEvent'
@@ -8,8 +7,7 @@ const SpendingUpdatedEvent = 'SpendingUpdatedEvent'
 
 module.exports = {
   CheckingAccountCreatedEvent,
-  CheckingAccountPropertyChangedEvent,
-  CheckingAccountUserCreatedEvent,
+  CheckingAccountUpdatedEvent,
   PeriodicalCreatedEvent,
   SpendingCreatedEvent,
   SpendingDeletedEvent,

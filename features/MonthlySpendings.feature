@@ -50,20 +50,20 @@ Feature: Monthly Spendings
     Then "balance" should equal -18642
     Then "savings" should equal 0
 
-# Scenario: Change the monthly flag on an account
+  Scenario: Change the monthly flag on an account
 
-#   When I GET {createdCheckingAccount}
-#   Then the status code should be 200
-#   And "monthly" should equal false
-#   And "$version" should equal 1
-#   And I store the link to "update-monthly" as "UpdateMonthlyEndpoint"
-#   And "1" is the If-Match header
-#   When I PUT to {UpdateMonthlyEndpoint}
-#   """
-#   {"value": true}
-#   """
-#   Then the status code should be 202
-#   When I GET {createdCheckingAccount}
-#   Then the status code should be 200
-#   And "monthly" should equal true
-#   And "$version" should equal 2
+    When I GET {createdCheckingAccount}
+    Then the status code should be 200
+    And "monthly" should equal false
+    And "$version" should equal 1
+    And I store the link to "update-monthly" as "UpdateMonthlyEndpoint"
+    And "1" is the If-Match header
+    When I PUT to {UpdateMonthlyEndpoint}
+    """
+    {"value": true}
+    """
+    Then the status code should be 202
+    When I GET {createdCheckingAccount}
+    Then the status code should be 200
+    And "monthly" should equal true
+    And "$version" should equal 2

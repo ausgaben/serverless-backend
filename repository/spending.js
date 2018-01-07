@@ -19,6 +19,7 @@ class SpendingRepository extends AggregateRepository {
 
   /**
    * @param {object} payload
+   * @return {Promise.<SpendingCreatedEvent>}
    */
   add (payload) {
     return this.eventStore
@@ -36,7 +37,7 @@ class SpendingRepository extends AggregateRepository {
    *
    * @param {SpendingModel} spending
    * @param {object} payload
-   * @return {Promise.<SpendingDeletedEvent>}
+   * @return {Promise.<SpendingUpdatedEvent>}
    */
   update (spending, payload) {
     return this.eventStore

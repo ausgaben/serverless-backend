@@ -4,7 +4,7 @@ const {AggregateRelation, EventStore} = require('@rheactorjs/event-store-dynamod
 const {CheckingAccountRepository} = require('../repository/checking-account')
 const {SpendingRepository} = require('../repository/spending')
 const {AggregateSortIndex} = require('../repository/aggregate-sort-index')
-const {AccessDeniedError} = require('@rheactorjs/errors')
+const {AccessDeniedError, ConflictError} = require('@rheactorjs/errors')
 const {ReportModel} = require('../model/report')
 
 /**
@@ -58,6 +58,13 @@ class CheckingAccountService {
       })
   }
 
+  update (user, id, version, property, value) {
+    return this.getById(user, id)
+      .then(checkVersion(version))
+      .then(checkingAccount => this.checkingAccountRepo.update(checkingAccount, {[property]: value}))
+      .then(() => undefined)
+  }
+
   createSpending (user, checkingAccountId, category, title, amount, booked = false, bookedAt, saving = false) {
     return this.getById(user, checkingAccountId)
       .then(() => this.spendingRepo.add({
@@ -66,8 +73,9 @@ class CheckingAccountService {
       .then(() => undefined)
   }
 
-  updateSpending (user, id, category, title, amount, booked, bookedAt, saving) {
+  updateSpending (user, id, version, category, title, amount, booked, bookedAt, saving) {
     return this.getSpendingById(user, id)
+      .then(checkVersion(version))
       .then(spending => this.spendingRepo.update(spending, {
         category,
         title,
@@ -105,22 +113,25 @@ class CheckingAccountService {
   getReport (user, id, query = '') {
     const p = parseQuery(query)
     return this.getById(user, id)
-      .then(checkingAccount => this.spendingRepo.findIdsByCheckingAccountId(checkingAccount.meta.id, {from: p.tokens.from, to: p.tokens.to})
-        .map(id => this.spendingRepo.getById(id))
-        .filter(({booked}) => booked)
-        .reduce((report, spending) => {
-          report.balance += spending.amount
-          if (spending.amount >= 0) {
-            report.income += spending.amount
-          } else {
-            if (spending.saving) {
-              report.savings += spending.amount
+      .then(checkingAccount => this.spendingRepo.findIdsByCheckingAccountId(checkingAccount.meta.id, {
+        from: p.tokens.from,
+        to: p.tokens.to
+      })
+          .map(id => this.spendingRepo.getById(id))
+          .filter(({booked}) => booked)
+          .reduce((report, spending) => {
+            report.balance += spending.amount
+            if (spending.amount >= 0) {
+              report.income += spending.amount
             } else {
-              report.spendings += spending.amount
+              if (spending.saving) {
+                report.savings += spending.amount
+              } else {
+                report.spendings += spending.amount
+              }
             }
-          }
-          return report
-        }, new ReportModel(checkingAccount.meta.id))
+            return report
+          }, new ReportModel(checkingAccount.meta.id))
       )
   }
 }
@@ -136,6 +147,13 @@ const parseQuery = str => {
     tokens,
     text: Object.keys(tokens).reduce((str, token) => str.replace(`${token}:${tokens[token]}`, ''), str).trim()
   }
+}
+
+const checkVersion = theirVersion => aggregate => {
+  if (aggregate.meta.version !== theirVersion) {
+    throw new ConflictError(`${aggregate.constructor.name} "${aggregate.meta.id}" has been modified. Your version is ${theirVersion} our version is ${aggregate.meta.version}`)
+  }
+  return aggregate
 }
 
 module.exports = {CheckingAccountService}

@@ -7,7 +7,7 @@ const {List} = require('@rheactorjs/models')
 const {URIValue} = require('@rheactorjs/value-objects')
 const {CheckingAccount} = require('@ausgaben/models')
 const {relations} = require('./jsonld')
-const {joi: {validate, NonEmptyString}, authorize, checkingAccountService: service} = require('./util')
+const {joi: {validate, NonEmptyString, Integer}, authorize, checkingAccountService: service} = require('./util')
 
 const presentCheckingAccount = relations => aggregate => new CheckingAccount({
   $id: relations.createId(CheckingAccount.$context, aggregate.meta.id),
@@ -66,6 +66,24 @@ module.exports = {
       ])
       .then(([{id}, user]) => service(context).getById(user, id))
       .then(checkingAccount => presentCheckingAccount(relations(new URIValue(process.env.API_ENDPOINT)))(checkingAccount))
+      .then(successHandler(callback))
+      .catch(errorHandler(callback))
+  },
+  update: (event, context, callback) => {
+    Promise
+      .all([
+        validate(
+          Object.assign({}, event.pathParameters, JSON.parse(event.body), {version: event.headers['If-Match']}),
+          Joi.object().keys({
+            id: NonEmptyString.required(),
+            property: NonEmptyString.required(),
+            value: Joi.any().required(),
+            version: Integer.required()
+          })
+        ),
+        authorize(event)
+      ])
+      .then(([{id, property, value, version}, user]) => service(context).update(user, id, version, property, value))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   }
