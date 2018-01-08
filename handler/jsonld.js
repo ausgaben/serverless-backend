@@ -1,6 +1,6 @@
 const {JSONLD, JsonWebToken, Link, Status, User} = require('@rheactorjs/models')
 const {URIValue, URIValueType} = require('@rheactorjs/value-objects')
-const {Category, CheckingAccount, Periodical, Report, Spending, Title} = require('@ausgaben/models')
+const {CheckingAccount, Periodical, Report, Spending, Title} = require('@ausgaben/models')
 // const {$context as streamContext} = require( '../api/stream')
 
 /**
@@ -37,8 +37,7 @@ exports.relations = apiBase => {
   relations.addLink(User.$context, new Link(new URIValue(`${apiBase}/user/:id/lastname`), User.$context, false, 'update-lastname'))
 
   relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/spending/search`), Spending.$context, true, 'spendings'))
-  relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/category/search`), Category.$context, true, 'categories'))
-  relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/title/search`), Title.$context, true, 'titles'))
+  relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/titles/search`), Title.$context, true, 'titles'))
   relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/spending`), Spending.$context, false, 'create-spending'))
   relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/periodical/search`), Periodical.$context, true, 'periodicals'))
   relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/periodical`), Periodical.$context, false, 'create-periodical'))

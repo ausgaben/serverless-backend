@@ -166,6 +166,12 @@ const endpoints = [
     }
   },
   {
+    path: /^POST \/checking-account\/([^/]+)\/titles\/search$/,
+    handler: (event, context, callback) => {
+      checkingAccountHandler.findTitles(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+    }
+  },
+  {
     path: /^PUT \/spending\/(.+)$/,
     handler: (event, context, callback) => {
       spendingHandler.update(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)

@@ -1,11 +1,11 @@
 'use strict'
 
-const {CheckingAccountService} = require('../service/checking-account')
+const {Ausgaben} = require('../service/ausgaben')
 const {DynamoDB} = require('aws-sdk')
 const {ValidationFailedError} = require('@rheactorjs/errors')
 const Joi = require('joi')
 
-const checkingAccountService = context => new CheckingAccountService(
+const checkingAccountService = context => new Ausgaben(
   context.dynamoDB || new DynamoDB(),
   process.env.TABLE_EVENTS || 'ausgaben-events',
   process.env.TABLE_RELATIONS || 'ausgaben-relations',

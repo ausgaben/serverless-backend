@@ -29,7 +29,8 @@ class SpendingRepository extends AggregateRepository {
           this.relation.addRelatedId('checkingAccount', payload.checkingAccount, event.aggregateId),
           updateBookedIndex(this.sortIndex)(payload.checkingAccount, event.aggregateId, payload.bookedAt)
         ])
-        .then(() => event))
+        .then(() => event)
+      )
   }
 
   /**

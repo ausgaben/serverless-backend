@@ -10,9 +10,10 @@ const {v4} = require('uuid')
  * @constructor
  */
 class CheckingAccountRepository extends AggregateRepository {
-  constructor (eventStore, aggregateRelation) {
+  constructor (eventStore, aggregateRelation, aggregateIndex) {
     super(CheckingAccountModel, eventStore)
     this.relation = aggregateRelation
+    this.sortIndex = aggregateIndex
   }
 
   /**

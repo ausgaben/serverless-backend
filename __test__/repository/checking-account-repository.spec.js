@@ -3,16 +3,18 @@
 const {CheckingAccountRepository} = require('../../repository/checking-account')
 const Promise = require('bluebird')
 const {ModelEvent, AggregateRelation, EventStore} = require('@rheactorjs/event-store-dynamodb')
+const {AggregateSortIndex} = require('../../repository/aggregate-sort-index')
 const {dynamoDB, close} = require('@rheactorjs/event-store-dynamodb/test/helper')
 
 describe('CheckingAccountRepository', () => {
   let checkingAccountRepo
 
   beforeAll(() => dynamoDB()
-    .spread((dynamoDB, eventsTable, relationsTable) => {
+    .spread((dynamoDB, eventsTable, relationsTable, indexTable) => {
       checkingAccountRepo = new CheckingAccountRepository(
         new EventStore('CheckingAccount', dynamoDB, eventsTable),
-        new AggregateRelation('CheckingAccount', dynamoDB, relationsTable)
+        new AggregateRelation('CheckingAccount', dynamoDB, relationsTable),
+        new AggregateSortIndex('CheckingAccount', dynamoDB, indexTable)
       )
     }))
 

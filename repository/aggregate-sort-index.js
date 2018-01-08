@@ -26,7 +26,7 @@ class AggregateSortIndex {
   add (indexName, aggregateId, key) {
     NonEmptyString(indexName, ['AggregateSortIndex.add()', 'indexName:String'])
     NonEmptyString(aggregateId, ['AggregateSortIndex.add()', 'aggregateId:String'])
-    NonEmptyString(key, ['AggregateSortIndex.add()', 'value:String'])
+    NonEmptyString(key, ['AggregateSortIndex.add()', 'key:String'])
     return this.dynamoDB
       .updateItem({
         TableName: this.tableName,
@@ -126,6 +126,86 @@ class AggregateSortIndex {
         const flattened = idSets.reduce((idSets, ids) => idSets.concat(ids), [])
         return flattened.sort((id1, id2) => idx[id1] > idx[id2] ? 1 : -1)
       })
+  }
+
+  /**
+   * Add the given item to the index
+   *
+   * @param {String} indexName
+   * @param {String} item
+   * @returns {Promise}
+   */
+  addToList (indexName, item) {
+    NonEmptyString(indexName, ['AggregateSortIndex.add()', 'indexName:String'])
+    NonEmptyString(item, ['AggregateSortIndex.add()', 'item:String'])
+    return this.dynamoDB
+      .updateItem({
+        TableName: this.tableName,
+        Key: {
+          AggregateIndexName: {
+            S: `${this.aggregateName}.${indexName}`
+          },
+          IndexKey: {
+            S: item
+          }
+        }
+      })
+      .promise()
+  }
+
+  /**
+   * Removes the given key from the index
+   *
+   * @param {String} indexName
+   * @param {String} item
+   * @returns {Promise}
+   */
+  removeFromList (indexName, item) {
+    NonEmptyString(indexName, ['AggregateSortIndex.add()', 'indexName:String'])
+    NonEmptyString(item, ['AggregateSortIndex.add()', 'item:String'])
+    return this.dynamoDB
+      .deleteItem({
+        TableName: this.tableName,
+        Key: {
+          AggregateIndexName: {
+            S: `${this.aggregateName}.${indexName}`
+          },
+          IndexKey: {
+            S: item
+          }
+        }
+      })
+      .promise()
+  }
+
+  /**
+   * Find the keys in the given list
+   *
+   * @param {String} indexName
+   * @param {String} from
+   * @param {String} to
+   * @returns {Promise}
+   */
+  findListItems (indexName, from, to) {
+    NonEmptyString(indexName, ['AggregateSortIndex.find()', 'indexName:String'])
+    NonEmptyString(from, ['AggregateSortIndex.find()', 'from:String'])
+    t.maybe(NonEmptyString)(to, ['AggregateSortIndex.find()', 'to:?String'])
+    const q = {
+      TableName: this.tableName,
+      KeyConditionExpression: 'AggregateIndexName = :AggregateIndexName AND IndexKey >= :from',
+      ExpressionAttributeValues: {
+        ':AggregateIndexName': {S: `${this.aggregateName}.${indexName}`},
+        ':from': {S: from}
+      }
+    }
+    if (to) {
+      q.KeyConditionExpression = 'AggregateIndexName = :AggregateIndexName AND IndexKey BETWEEN :from AND :to'
+      q.ExpressionAttributeValues[':to'] = {S: to}
+    }
+    return this.dynamoDB
+      .query(q)
+      .promise()
+      .then(({Items}) => (Items || []).map(({IndexKey: {S}}) => S))
   }
 }
 

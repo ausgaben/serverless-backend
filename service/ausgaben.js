@@ -13,11 +13,12 @@ const {ReportModel} = require('../model/report')
  * @param {EventStore} eventStore
  * @constructor
  */
-class CheckingAccountService {
+class Ausgaben {
   constructor (dynamoDB, eventsTable, relationsTable, indexTable) {
     this.checkingAccountRepo = new CheckingAccountRepository(
       new EventStore('CheckingAccount', dynamoDB, eventsTable),
-      new AggregateRelation('CheckingAccount', dynamoDB, relationsTable)
+      new AggregateRelation('CheckingAccount', dynamoDB, relationsTable),
+      new AggregateSortIndex('CheckingAccount', dynamoDB, indexTable)
     )
     this.spendingRepo = new SpendingRepository(
       new EventStore('Spending', dynamoDB, eventsTable),
@@ -68,8 +69,15 @@ class CheckingAccountService {
   createSpending (user, checkingAccountId, category, title, amount, booked = false, bookedAt, saving = false) {
     return this.getById(user, checkingAccountId)
       .then(() => this.spendingRepo.add({
-        checkingAccount: checkingAccountId, category, title, amount, booked, bookedAt, saving
+        checkingAccount: checkingAccountId,
+        category,
+        title,
+        amount,
+        booked,
+        bookedAt,
+        saving
       }))
+      .then(event => this.indexSpending(event.aggregateId))
       .then(() => undefined)
   }
 
@@ -84,6 +92,7 @@ class CheckingAccountService {
         bookedAt,
         saving
       }))
+      .then(event => this.indexSpending(event.aggregateId))
       .then(() => undefined)
   }
 
@@ -134,6 +143,31 @@ class CheckingAccountService {
           }, new ReportModel(checkingAccount.meta.id))
       )
   }
+
+  findTitles (user, id, query = '', pagination) {
+    const q = parseQuery(query)
+    return this.getById(user, id)
+      .then(checkingAccount => {
+        const type = q.tokens.in === 'category' ? 'category' : 'title'
+        let index = `checkingAccount:${checkingAccount.meta.id}:${type}`
+        if (type === 'title') {
+          index = `${index}:category:${q.tokens.category}`
+        }
+        return this.checkingAccountRepo.sortIndex.findListItems(index, q.text, `${q.text}\uFFFF`)
+      })
+      .then(strings => {
+        const total = strings.length
+        return pagination.result(pagination.splice(strings.map(title => ({title}))), total, query)
+      })
+  }
+
+  indexSpending (id) {
+    return this.spendingRepo.getById(id)
+      .then(spending => Promise.all([
+        this.checkingAccountRepo.sortIndex.addToList(`checkingAccount:${spending.checkingAccount}:title:category:${spending.category}`, spending.title),
+        this.checkingAccountRepo.sortIndex.addToList(`checkingAccount:${spending.checkingAccount}:category`, spending.category)
+      ]))
+  }
 }
 
 const parseQuery = str => {
@@ -156,4 +190,4 @@ const checkVersion = theirVersion => aggregate => {
   return aggregate
 }
 
-module.exports = {CheckingAccountService}
+module.exports = {Ausgaben}

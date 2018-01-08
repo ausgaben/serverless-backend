@@ -5,7 +5,7 @@ const {Pagination} = require('@rheactorjs/event-store-dynamodb')
 const Joi = require('joi')
 const {List} = require('@rheactorjs/models')
 const {URIValue} = require('@rheactorjs/value-objects')
-const {CheckingAccount} = require('@ausgaben/models')
+const {CheckingAccount, Title} = require('@ausgaben/models')
 const {relations} = require('./jsonld')
 const {joi: {validate, NonEmptyString, Integer}, authorize, checkingAccountService: service} = require('./util')
 
@@ -84,6 +84,24 @@ module.exports = {
         authorize(event)
       ])
       .then(([{id, property, value, version}, user]) => service(context).update(user, id, version, property, value))
+      .then(successHandler(callback))
+      .catch(errorHandler(callback))
+  },
+  findTitles: (event, context, callback) => {
+    Promise
+      .all([
+        validate(
+          Object.assign({}, event.queryStringParameters, event.pathParameters),
+          Joi.object().keys({
+            id: NonEmptyString.required(),
+            q: NonEmptyString.required()
+          })
+        ),
+        authorize(event)
+      ])
+      .then(([{id, q}, user]) => service(context).findTitles(user, id, q, new Pagination(0))
+        .then(({items, total, itemsPerPage, offset}) => new List(items.map(({title}) => new Title(title)), total, itemsPerPage, [], offset))
+      )
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   }
