@@ -126,6 +126,7 @@ const apiHandler = require('../../handler/api')
 const userHandler = require('../../handler/user')
 const checkingAccountHandler = require('../../handler/checkingAccount')
 const spendingHandler = require('../../handler/spending')
+const periodicalHandler = require('../../handler/periodical')
 const reportHandler = require('../../handler/report')
 const endpoints = [
   {path: new RegExp(`GET /api`), handler: apiHandler.api},
@@ -154,6 +155,12 @@ const endpoints = [
     }
   },
   {
+    path: /^POST \/checking-account\/([^/]+)\/periodical$/,
+    handler: (event, context, callback) => {
+      periodicalHandler.create(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+    }
+  },
+  {
     path: /^PUT \/checking-account\/([^/]+)\/([^/]+)$/,
     handler: (event, context, callback) => {
       checkingAccountHandler.update(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2], property: event.path.split('/')[3]}}), context, callback)
@@ -163,6 +170,12 @@ const endpoints = [
     path: /^POST \/checking-account\/([^/]+)\/spending\/search$/,
     handler: (event, context, callback) => {
       spendingHandler.search(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+    }
+  },
+  {
+    path: /^POST \/checking-account\/([^/]+)\/periodical\/search$/,
+    handler: (event, context, callback) => {
+      periodicalHandler.search(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
     }
   },
   {

@@ -3,6 +3,7 @@
 const {AggregateRelation, EventStore} = require('@rheactorjs/event-store-dynamodb')
 const {CheckingAccountRepository} = require('../repository/checking-account')
 const {SpendingRepository} = require('../repository/spending')
+const {PeriodicalRepository} = require('../repository/periodical')
 const {AggregateSortIndex} = require('../repository/aggregate-sort-index')
 const {AccessDeniedError, ConflictError} = require('@rheactorjs/errors')
 const {ReportModel} = require('../model/report')
@@ -24,6 +25,10 @@ class Ausgaben {
       new EventStore('Spending', dynamoDB, eventsTable),
       new AggregateRelation('Spending', dynamoDB, relationsTable),
       new AggregateSortIndex('Spending', dynamoDB, indexTable)
+    )
+    this.periodicalRepo = new PeriodicalRepository(
+      new EventStore('Periodical', dynamoDB, eventsTable),
+      new AggregateRelation('Periodical', dynamoDB, relationsTable)
     )
   }
 
@@ -167,6 +172,60 @@ class Ausgaben {
         this.checkingAccountRepo.sortIndex.addToList(`checkingAccount:${spending.checkingAccount}:title:category:${spending.category}`, spending.title),
         this.checkingAccountRepo.sortIndex.addToList(`checkingAccount:${spending.checkingAccount}:category`, spending.category)
       ]))
+  }
+
+  createPeriodical (user,
+                   checkingAccountId,
+                   category,
+                   title,
+                   amount,
+                   estimate = false,
+                   startsAt,
+                   saving = false,
+                   enabledIn01 = false,
+                   enabledIn02 = false,
+                   enabledIn03 = false,
+                   enabledIn04 = false,
+                   enabledIn05 = false,
+                   enabledIn06 = false,
+                   enabledIn07 = false,
+                   enabledIn08 = false,
+                   enabledIn09 = false,
+                   enabledIn10 = false,
+                   enabledIn11 = false,
+                   enabledIn12 = false) {
+    return this.getById(user, checkingAccountId)
+      .then(() => this.periodicalRepo.add({
+        checkingAccount: checkingAccountId,
+        category,
+        title,
+        amount,
+        estimate,
+        startsAt,
+        saving,
+        enabledIn01,
+        enabledIn02,
+        enabledIn03,
+        enabledIn04,
+        enabledIn05,
+        enabledIn06,
+        enabledIn07,
+        enabledIn08,
+        enabledIn09,
+        enabledIn10,
+        enabledIn11,
+        enabledIn12
+      }))
+      .then(() => undefined)
+  }
+
+  findPeriodicals (user, checkingAccountId, pagination) {
+    return this.periodicalRepo.findIdsByCheckingAccountId(checkingAccountId)
+      .then(periodicalIds => {
+        const total = periodicalIds.length
+        return Promise.all(pagination.splice(periodicalIds).map(id => this.periodicalRepo.getById(id)))
+          .then(items => pagination.result(items, total))
+      })
   }
 }
 

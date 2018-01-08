@@ -38,6 +38,10 @@ class PeriodicalRepository extends AggregateRepository {
     return this.findAll()
       .filter(({enabledIn}) => enabledIn & mask)
   }
+
+  findIdsByCheckingAccountId (checkingAccountId) {
+    return this.relation.findByRelatedId('checkingAccount', checkingAccountId)
+  }
 }
 
 module.exports = {PeriodicalRepository}
