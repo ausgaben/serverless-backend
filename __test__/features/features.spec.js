@@ -480,9 +480,8 @@ const rootStore = createStore(combineReducers({
 }))
 
 beforeAll(() => dynamoDB()
-  .spread((dynamoDB, eventsTable, relationsTable, indexTable) => {
+  .spread((dynamoDB, eventsTable, indexTable) => {
     process.env.TABLE_EVENTS = eventsTable
-    process.env.TABLE_RELATIONS = relationsTable
     process.env.TABLE_INDEX = indexTable
     app.dynamoDB = dynamoDB
   }))

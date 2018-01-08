@@ -31,7 +31,7 @@ class AggregateSortIndex {
       .updateItem({
         TableName: this.tableName,
         Key: {
-          AggregateIndexName: {
+          IndexName: {
             S: `${this.aggregateName}.${indexName}`
           },
           IndexKey: {
@@ -60,10 +60,10 @@ class AggregateSortIndex {
     return this.dynamoDB
       .query({
         TableName: this.tableName,
-        KeyConditionExpression: 'AggregateIndexName = :AggregateIndexName AND IndexKey > :IndexKey',
+        KeyConditionExpression: 'IndexName = :IndexName AND IndexKey > :IndexKey',
         FilterExpression: 'contains(AggregateIds, :AggregateId)',
         ExpressionAttributeValues: {
-          ':AggregateIndexName': {S: `${this.aggregateName}.${indexName}`},
+          ':IndexName': {S: `${this.aggregateName}.${indexName}`},
           ':IndexKey': {S: Buffer.from('\0', 'ascii').toString()},
           ':AggregateId': {S: aggregateId}
         }
@@ -71,11 +71,11 @@ class AggregateSortIndex {
       .promise()
       .then(({Items}) => {
         if (Items) {
-          return Promise.all(Items.map(({AggregateIndexName, IndexKey}) => this.dynamoDB
+          return Promise.all(Items.map(({IndexName, IndexKey}) => this.dynamoDB
             .updateItem({
               TableName: this.tableName,
               Key: {
-                AggregateIndexName,
+                IndexName,
                 IndexKey
               },
               UpdateExpression: 'DELETE AggregateIds :AggregateId',
@@ -102,14 +102,14 @@ class AggregateSortIndex {
     t.maybe(NonEmptyString)(to, ['AggregateSortIndex.find()', 'to:?String'])
     const q = {
       TableName: this.tableName,
-      KeyConditionExpression: 'AggregateIndexName = :AggregateIndexName AND IndexKey >= :from',
+      KeyConditionExpression: 'IndexName = :IndexName AND IndexKey >= :from',
       ExpressionAttributeValues: {
-        ':AggregateIndexName': {S: `${this.aggregateName}.${indexName}`},
+        ':IndexName': {S: `${this.aggregateName}.${indexName}`},
         ':from': {S: from}
       }
     }
     if (to) {
-      q.KeyConditionExpression = 'AggregateIndexName = :AggregateIndexName AND IndexKey BETWEEN :from AND :to'
+      q.KeyConditionExpression = 'IndexName = :IndexName AND IndexKey BETWEEN :from AND :to'
       q.ExpressionAttributeValues[':to'] = {S: to}
     }
     return this.dynamoDB
@@ -142,7 +142,7 @@ class AggregateSortIndex {
       .updateItem({
         TableName: this.tableName,
         Key: {
-          AggregateIndexName: {
+          IndexName: {
             S: `${this.aggregateName}.${indexName}`
           },
           IndexKey: {
@@ -167,7 +167,7 @@ class AggregateSortIndex {
       .deleteItem({
         TableName: this.tableName,
         Key: {
-          AggregateIndexName: {
+          IndexName: {
             S: `${this.aggregateName}.${indexName}`
           },
           IndexKey: {
@@ -192,14 +192,14 @@ class AggregateSortIndex {
     t.maybe(NonEmptyString)(to, ['AggregateSortIndex.find()', 'to:?String'])
     const q = {
       TableName: this.tableName,
-      KeyConditionExpression: 'AggregateIndexName = :AggregateIndexName AND IndexKey >= :from',
+      KeyConditionExpression: 'IndexName = :IndexName AND IndexKey >= :from',
       ExpressionAttributeValues: {
-        ':AggregateIndexName': {S: `${this.aggregateName}.${indexName}`},
+        ':IndexName': {S: `${this.aggregateName}.${indexName}`},
         ':from': {S: from}
       }
     }
     if (to) {
-      q.KeyConditionExpression = 'AggregateIndexName = :AggregateIndexName AND IndexKey BETWEEN :from AND :to'
+      q.KeyConditionExpression = 'IndexName = :IndexName AND IndexKey BETWEEN :from AND :to'
       q.ExpressionAttributeValues[':to'] = {S: to}
     }
     return this.dynamoDB

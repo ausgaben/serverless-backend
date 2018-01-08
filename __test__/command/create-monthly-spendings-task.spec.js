@@ -17,14 +17,14 @@ describe('CreateMonthlySpendingsCommand', () => {
   let periodicalRepo, spendingRepo
 
   beforeAll(() => dynamoDB()
-    .spread((dynamoDB, eventsTable, relationsTable, indexTable) => {
+    .spread((dynamoDB, eventsTable, indexTable) => {
       periodicalRepo = new PeriodicalRepository(
         new EventStore('Periodical', dynamoDB, eventsTable),
-        new AggregateRelation('Periodical', dynamoDB, relationsTable)
+        new AggregateRelation('Periodical', dynamoDB, indexTable)
       )
       spendingRepo = new SpendingRepository(
         new EventStore('Spending', dynamoDB, eventsTable),
-        new AggregateRelation('Spending', dynamoDB, relationsTable),
+        new AggregateRelation('Spending', dynamoDB, indexTable),
         new AggregateSortIndex('Spending', dynamoDB, indexTable)
       )
     }))

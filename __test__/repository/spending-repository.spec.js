@@ -10,10 +10,10 @@ describe('SpendingRepository', () => {
   let spendingRepo
 
   beforeAll(() => dynamoDB()
-    .spread((dynamoDB, eventsTable, relationsTable, indexTable) => {
+    .spread((dynamoDB, eventsTable, indexTable) => {
       spendingRepo = new SpendingRepository(
         new EventStore('Spending', dynamoDB, eventsTable),
-        new AggregateRelation('Spending', dynamoDB, relationsTable),
+        new AggregateRelation('Spending', dynamoDB, indexTable),
         new AggregateSortIndex('Spending', dynamoDB, indexTable)
       )
     }))

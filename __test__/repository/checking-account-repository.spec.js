@@ -10,10 +10,10 @@ describe('CheckingAccountRepository', () => {
   let checkingAccountRepo
 
   beforeAll(() => dynamoDB()
-    .spread((dynamoDB, eventsTable, relationsTable, indexTable) => {
+    .spread((dynamoDB, eventsTable, indexTable) => {
       checkingAccountRepo = new CheckingAccountRepository(
         new EventStore('CheckingAccount', dynamoDB, eventsTable),
-        new AggregateRelation('CheckingAccount', dynamoDB, relationsTable),
+        new AggregateRelation('CheckingAccount', dynamoDB, indexTable),
         new AggregateSortIndex('CheckingAccount', dynamoDB, indexTable)
       )
     }))

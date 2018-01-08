@@ -1,10 +1,16 @@
 service: ausgaben
+
 custom: ${file(./serverless.dev.yml)}
+
 provider:
   name: aws
   runtime: nodejs6.10
-  stage: ${self:custom.environment.STAGE}
-  region: ${self:custom.environment.AWS_REGION}
+  stage: ${opt:stage, 'dev'}
+  region: eu-central-1
+  environment:
+    TABLE_EVENTS: ${self:service}-${self:provider.stage}-events
+    TABLE_INDEX: ${self:service}-${self:provider.stage}-index
+
 functions:
   accountList:
     handler: handler/accounts.list
@@ -16,21 +22,54 @@ functions:
           cors: true
           authorizer:
             arn: ${self:custom.environment.AWS_COGNITO_USERPOOL_ARN}
+
 resources:
   Resources:
-    CheckingAccountDynamoDBTable:
+    eventsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-
-        AttributeDefinitions:
-          -
-            AttributeName: id
-            AttributeType: S
+        TableName: ${self:service}-${self:provider.stage}-events
         KeySchema:
-          -
-            AttributeName: id
-            KeyType: HASH
+        - AttributeName: Id
+          KeyType: HASH
+        - AttributeName: Version
+          KeyType: RANGE
+        AttributeDefinitions:
+        - AttributeName: Id
+          AttributeType: S
+        - AttributeName: Version
+          AttributeType: N
+        - AttributeName: AggregateName
+          AttributeType: S
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        GlobalSecondaryIndexes:
+        - IndexName: Aggregate-index
+          KeySchema:
+          - AttributeName: AggregateName
+            KeyType: HASH
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+            - AggregateId
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+    indexTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-index
+        KeySchema:
+        - AttributeName: IndexName
+          KeyType: HASH
+        - AttributeName: IndexKey
+          KeyType: RANGE
+        AttributeDefinitions:
+        - AttributeName: IndexName
+          AttributeType: S
+        - AttributeName: IndexKey
+          AttributeType: S
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

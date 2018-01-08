@@ -8,7 +8,6 @@ const Joi = require('joi')
 const checkingAccountService = context => new Ausgaben(
   context.dynamoDB || new DynamoDB(),
   process.env.TABLE_EVENTS || 'ausgaben-events',
-  process.env.TABLE_RELATIONS || 'ausgaben-relations',
   process.env.TABLE_INDEX || 'ausgaben-index'
 )
 

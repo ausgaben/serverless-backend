@@ -15,20 +15,20 @@ const {ReportModel} = require('../model/report')
  * @constructor
  */
 class Ausgaben {
-  constructor (dynamoDB, eventsTable, relationsTable, indexTable) {
+  constructor (dynamoDB, eventsTable, indexTable) {
     this.checkingAccountRepo = new CheckingAccountRepository(
       new EventStore('CheckingAccount', dynamoDB, eventsTable),
-      new AggregateRelation('CheckingAccount', dynamoDB, relationsTable),
+      new AggregateRelation('CheckingAccount', dynamoDB, indexTable),
       new AggregateSortIndex('CheckingAccount', dynamoDB, indexTable)
     )
     this.spendingRepo = new SpendingRepository(
       new EventStore('Spending', dynamoDB, eventsTable),
-      new AggregateRelation('Spending', dynamoDB, relationsTable),
+      new AggregateRelation('Spending', dynamoDB, indexTable),
       new AggregateSortIndex('Spending', dynamoDB, indexTable)
     )
     this.periodicalRepo = new PeriodicalRepository(
       new EventStore('Periodical', dynamoDB, eventsTable),
-      new AggregateRelation('Periodical', dynamoDB, relationsTable)
+      new AggregateRelation('Periodical', dynamoDB, indexTable)
     )
   }
 

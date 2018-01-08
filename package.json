@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@ausgaben/models": "^2.0.1",
-    "@rheactorjs/event-store-dynamodb": "^2.2.0",
+    "@rheactorjs/event-store-dynamodb": "^2.3.0",
     "@rheactorjs/models": "^3.0.0",
     "joi": "^13.1.0",
     "tcomb": "^3.2.24",

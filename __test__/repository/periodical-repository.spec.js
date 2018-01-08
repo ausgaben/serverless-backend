@@ -9,10 +9,10 @@ describe('PeriodicalRepository', () => {
   let periodicalRepo
 
   beforeAll(() => dynamoDB()
-    .spread((dynamoDB, eventsTable, relationsTable) => {
+    .spread((dynamoDB, eventsTable, indexTable) => {
       periodicalRepo = new PeriodicalRepository(
         new EventStore('Periodical', dynamoDB, eventsTable),
-        new AggregateRelation('Periodical', dynamoDB, relationsTable)
+        new AggregateRelation('Periodical', dynamoDB, indexTable)
       )
     }))
 
