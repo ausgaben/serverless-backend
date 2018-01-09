@@ -87,7 +87,7 @@ module.exports = {
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
-  findTitles: (event, context, callback) => {
+  searchTitles: (event, context, callback) => {
     Promise
       .all([
         validate(
@@ -99,7 +99,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{id, q}, user]) => service(context).findTitles(user, id, q, new Pagination(0))
+      .then(([{id, q}, user]) => service(context).searchTitles(user, id, q, new Pagination(0))
         .then(({items, total, itemsPerPage, offset}) => new List(items.map(({title}) => new Title(title)), total, itemsPerPage, [], offset))
       )
       .then(successHandler(callback))

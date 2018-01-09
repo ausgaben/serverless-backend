@@ -16,6 +16,7 @@
   "devDependencies": {
     "@commitlint/cli": "^5.2.8",
     "@commitlint/config-angular": "^5.1.1",
+    "aws-sdk": "^2.177.0",
     "chalk": "^2.3.0",
     "codeclimate-test-reporter": "^0.5.0",
     "dinossauro": "0.0.7",
@@ -29,9 +30,10 @@
     "toposort": "^1.0.6"
   },
   "dependencies": {
-    "@ausgaben/models": "^2.0.1",
-    "@rheactorjs/event-store-dynamodb": "^2.3.0",
+    "@ausgaben/models": "^2.0.2",
+    "@rheactorjs/event-store-dynamodb": "^2.3.1",
     "@rheactorjs/models": "^3.0.0",
+    "bluebird": "^3.5.1",
     "joi": "^13.1.0",
     "tcomb": "^3.2.24",
     "uuid": "^3.1.0"

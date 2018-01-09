@@ -13,7 +13,7 @@ const presentReport = relations => aggregate => new Report({
   income: aggregate.income,
   spendings: aggregate.spendings,
   savings: aggregate.savings,
-  checkingAccount: new Reference(CheckingAccount.$context, relations.createId(CheckingAccount.$context, aggregate.checkingAccount))
+  checkingAccount: new Reference(relations.createId(CheckingAccount.$context, aggregate.checkingAccount), CheckingAccount.$context)
 })
 
 module.exports = {

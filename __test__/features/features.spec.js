@@ -122,6 +122,7 @@ const userRepo = {
   getById: id => Promise.resolve(users[id])
 }
 
+// TODO: parse serverless.yml functions
 const apiHandler = require('../../handler/api')
 const userHandler = require('../../handler/user')
 const checkingAccountHandler = require('../../handler/checkingAccount')
@@ -129,7 +130,7 @@ const spendingHandler = require('../../handler/spending')
 const periodicalHandler = require('../../handler/periodical')
 const reportHandler = require('../../handler/report')
 const endpoints = [
-  {path: new RegExp(`GET /api`), handler: apiHandler.api},
+  {path: new RegExp(`GET /api`), handler: apiHandler.index},
   {
     path: /^POST \/me$/,
     handler: userHandler.me
@@ -181,7 +182,7 @@ const endpoints = [
   {
     path: /^POST \/checking-account\/([^/]+)\/titles\/search$/,
     handler: (event, context, callback) => {
-      checkingAccountHandler.findTitles(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+      checkingAccountHandler.searchTitles(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
     }
   },
   {

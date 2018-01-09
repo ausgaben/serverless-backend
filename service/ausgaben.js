@@ -7,6 +7,9 @@ const {PeriodicalRepository} = require('../repository/periodical')
 const {AggregateSortIndex} = require('../repository/aggregate-sort-index')
 const {AccessDeniedError, ConflictError} = require('@rheactorjs/errors')
 const {ReportModel} = require('../model/report')
+const AWS = require('aws-sdk')
+const Promise = require('bluebird')
+AWS.config.setPromisesDependency(Promise)
 
 /**
  * Creates a new CheckingAccount service
@@ -149,7 +152,7 @@ class Ausgaben {
       )
   }
 
-  findTitles (user, id, query = '', pagination) {
+  searchTitles (user, id, query = '', pagination) {
     const q = parseQuery(query)
     return this.getById(user, id)
       .then(checkingAccount => {

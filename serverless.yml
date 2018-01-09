@@ -10,18 +10,160 @@ provider:
   environment:
     TABLE_EVENTS: ${self:service}-${self:provider.stage}-events
     TABLE_INDEX: ${self:service}-${self:provider.stage}-index
+    API_ENDPOINT: ${self:custom.apiEndpoint}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+      - dynamodb:*
+      Resource: arn:aws:dynamodb:*:*:table/${self:service}-${self:provider.stage}-*
 
 functions:
-  accountList:
-    handler: handler/accounts.list
-    name: ausgaben-accounts-list-${self:custom.environment.STAGE}
+  apiIndex:
+    handler: handler/api.index
     events:
-      - http:
-          path: accounts
-          method: post
-          cors: true
-          authorizer:
-            arn: ${self:custom.environment.AWS_COGNITO_USERPOOL_ARN}
+    - http:
+        path: api
+        method: get
+        cors: true
+  me:
+    handler: handler/user.me
+    events:
+    - http:
+        path: api
+        method: post
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  createCheckingAccount:
+    handler: handler/checkingAccount.create
+    events:
+    - http:
+        path: checking-account
+        method: post
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  searchCheckingAccount:
+    handler: handler/checkingAccount.search
+    events:
+    - http:
+        path: checking-account/search
+        method: post
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  getCheckingAccount:
+    handler: handler/checkingAccount.get
+    events:
+    - http:
+        path: checking-account/{id}
+        method: get
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  createSpending:
+    handler: handler/spending.create
+    events:
+    - http:
+        path: checking-account/{id}/spending
+        method: post
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  createPeriodical:
+    handler: handler/periodical.create
+    events:
+    - http:
+        path: checking-account/{id}/periodical
+        method: post
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  updateCheckingAccount:
+    handler: handler/checkingAccount.update
+    events:
+    - http:
+        path: checking-account/{id}/{property}
+        method: put
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  searchSpending:
+    handler: handler/spending.search
+    events:
+    - http:
+        path: checking-account/{id}/spending/search
+        method: post
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  searchPeriodical:
+    handler: handler/periodical.search
+    events:
+    - http:
+        path: checking-account/{id}/periodical/search
+        method: post
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  searchTitles:
+    handler: handler/checkingAccount.searchTitles
+    events:
+    - http:
+        path: checking-account/{id}/titles/search
+        method: post
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  updateSpending:
+    handler: handler/spending.update
+    events:
+    - http:
+        path: spending/{id}
+        method: put
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  getSpending:
+    handler: handler/spending.get
+    events:
+    - http:
+        path: spending/{id}
+        method: get
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  deleteSpending:
+    handler: handler/spending.delete
+    events:
+    - http:
+        path: spending/{id}
+        method: delete
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
+
+  getReport:
+    handler: handler/report.get
+    events:
+    - http:
+        path: checking-account/{id}/report
+        method: post
+        cors: true
+        authorizer:
+          arn: ${self:custom.userPoolArn}
 
 resources:
   Resources:

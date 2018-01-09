@@ -5,7 +5,7 @@ const {relations} = require('./jsonld')
 const {URIValue} = require('@rheactorjs/value-objects')
 
 module.exports = {
-  api: (event, context, callback) => {
+  index: (event, context, callback) => {
     successHandler(callback)(
       relations(new URIValue(process.env.API_ENDPOINT)).index(),
       {
