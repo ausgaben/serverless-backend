@@ -14,18 +14,18 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@commitlint/cli": "^5.2.8",
-    "@commitlint/config-angular": "^5.1.1",
-    "aws-sdk": "^2.177.0",
+    "@commitlint/cli": "^6.1.0",
+    "@commitlint/config-angular": "^6.1.0",
+    "aws-sdk": "^2.189.0",
     "chalk": "^2.3.0",
     "codeclimate-test-reporter": "^0.5.0",
     "dinossauro": "0.0.7",
     "gherkin": "^5.0.0",
     "husky": "^0.14.3",
-    "jest": "^22.0.4",
-    "jsonwebtoken": "^8.1.0",
+    "jest": "^22.1.4",
+    "jsonwebtoken": "^8.1.1",
     "redux": "^3.7.2",
-    "serverless": "^1.25.0",
+    "serverless": "^1.26.0",
     "standard": "^10.0.3",
     "toposort": "^1.0.6"
   },
@@ -34,8 +34,8 @@
     "@rheactorjs/event-store-dynamodb": "^2.3.1",
     "@rheactorjs/models": "^3.0.0",
     "bluebird": "^3.5.1",
-    "joi": "^13.1.0",
+    "joi": "^13.1.2",
     "tcomb": "^3.2.24",
-    "uuid": "^3.1.0"
+    "uuid": "^3.2.1"
   }
 }
