@@ -134,21 +134,21 @@ class Ausgaben {
         from: p.tokens.from,
         to: p.tokens.to
       })
-          .map(id => this.spendingRepo.getById(id))
-          .filter(({booked}) => booked)
-          .reduce((report, spending) => {
-            report.balance += spending.amount
-            if (spending.amount >= 0) {
-              report.income += spending.amount
+        .map(id => this.spendingRepo.getById(id))
+        .filter(({booked}) => booked)
+        .reduce((report, spending) => {
+          report.balance += spending.amount
+          if (spending.amount >= 0) {
+            report.income += spending.amount
+          } else {
+            if (spending.saving) {
+              report.savings += spending.amount
             } else {
-              if (spending.saving) {
-                report.savings += spending.amount
-              } else {
-                report.spendings += spending.amount
-              }
+              report.spendings += spending.amount
             }
-            return report
-          }, new ReportModel(checkingAccount.meta.id))
+          }
+          return report
+        }, new ReportModel(checkingAccount.meta.id))
       )
   }
 
@@ -178,25 +178,25 @@ class Ausgaben {
   }
 
   createPeriodical (user,
-                   checkingAccountId,
-                   category,
-                   title,
-                   amount,
-                   estimate = false,
-                   startsAt,
-                   saving = false,
-                   enabledIn01 = false,
-                   enabledIn02 = false,
-                   enabledIn03 = false,
-                   enabledIn04 = false,
-                   enabledIn05 = false,
-                   enabledIn06 = false,
-                   enabledIn07 = false,
-                   enabledIn08 = false,
-                   enabledIn09 = false,
-                   enabledIn10 = false,
-                   enabledIn11 = false,
-                   enabledIn12 = false) {
+    checkingAccountId,
+    category,
+    title,
+    amount,
+    estimate = false,
+    startsAt,
+    saving = false,
+    enabledIn01 = false,
+    enabledIn02 = false,
+    enabledIn03 = false,
+    enabledIn04 = false,
+    enabledIn05 = false,
+    enabledIn06 = false,
+    enabledIn07 = false,
+    enabledIn08 = false,
+    enabledIn09 = false,
+    enabledIn10 = false,
+    enabledIn11 = false,
+    enabledIn12 = false) {
     return this.getById(user, checkingAccountId)
       .then(() => this.periodicalRepo.add({
         checkingAccount: checkingAccountId,
