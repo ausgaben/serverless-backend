@@ -42,6 +42,7 @@ exports.relations = apiBase => {
   relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/periodical/search`), Periodical.$context, true, 'periodicals'))
   relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/periodical`), Periodical.$context, false, 'create-periodical'))
   relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/monthly`), CheckingAccount.$context, false, 'update-monthly'))
+  relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/currency`), CheckingAccount.$context, false, 'update-currency'))
   relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/savings`), CheckingAccount.$context, false, 'update-savings'))
   relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/report`), Report.$context, false, 'report'))
   // relations.addLink(CheckingAccount.$context, new Link(new URIValue(`${apiBase}/checking-account/:id/stream`), streamContext, false, 'stream'))
