@@ -36,8 +36,10 @@ describe('CheckingAccountRepository', () => {
           )
           .spread((a1, a2) => {
             expect(a1.name).toEqual('CheckingAccount 1')
+            expect(a1.currency).toEqual('€')
             expect(a1.users).toEqual(['foo'])
             expect(a2.name).toEqual('CheckingAccount 2')
+            expect(a2.currency).toEqual('€')
             expect(a2.users).toEqual(['bar'])
             done()
           })

@@ -33,6 +33,7 @@ Feature: CheckingAccount
     And the Content-Type header should equal "application/vnd.ausgaben.v1+json; charset=utf-8"
     And "$context" should equal "https://github.com/ausgaben/ausgaben-rheactor/wiki/JsonLD#CheckingAccount"
     And "name" should equal "My first checking account"
+    And "currency" should equal "€"
     And "monthly" should equal false
     And "savings" should equal false
     And "$version" should equal 1

@@ -18,6 +18,7 @@ const presentCheckingAccount = relations => aggregate => new CheckingAccount({
   $deletedAt: aggregate.meta.deletedAt,
   identifier: aggregate.meta.id,
   name: aggregate.name,
+  currency: aggregate.currency,
   monthly: aggregate.monthly,
   savings: aggregate.savings
 })
