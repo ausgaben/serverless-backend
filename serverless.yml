@@ -1,6 +1,19 @@
 service: ausgaben
 
-custom: ${file(./serverless.dev.yml)}
+custom:
+  config: ${file(./serverless.dev.yml)}
+  cors:
+    origin: '*'
+    headers:
+      - Content-Type
+      - X-Amz-Date
+      - Authorization
+      - X-Api-Key
+      - X-Amz-Security-Token
+      - X-Amz-User-Agent
+      - If-Match
+      - Accept
+    allowCredentials: true
 
 provider:
   name: aws
@@ -10,7 +23,7 @@ provider:
   environment:
     TABLE_EVENTS: ${self:service}-${self:provider.stage}-events
     TABLE_INDEX: ${self:service}-${self:provider.stage}-index
-    API_ENDPOINT: ${self:custom.apiEndpoint}
+    API_ENDPOINT: ${self:custom.config.apiEndpoint}
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -24,16 +37,16 @@ functions:
     - http:
         path: api
         method: get
-        cors: true
+        cors: ${self:custom.cors}
   me:
     handler: handler/user.me
     events:
     - http:
         path: api
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   createCheckingAccount:
     handler: handler/checkingAccount.create
@@ -41,9 +54,9 @@ functions:
     - http:
         path: checking-account
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   searchCheckingAccount:
     handler: handler/checkingAccount.search
@@ -51,9 +64,9 @@ functions:
     - http:
         path: checking-account/search
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   getCheckingAccount:
     handler: handler/checkingAccount.get
@@ -61,9 +74,9 @@ functions:
     - http:
         path: checking-account/{id}
         method: get
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   createSpending:
     handler: handler/spending.create
@@ -71,9 +84,9 @@ functions:
     - http:
         path: checking-account/{id}/spending
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   createPeriodical:
     handler: handler/periodical.create
@@ -81,9 +94,9 @@ functions:
     - http:
         path: checking-account/{id}/periodical
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   updateCheckingAccount:
     handler: handler/checkingAccount.update
@@ -91,9 +104,9 @@ functions:
     - http:
         path: checking-account/{id}/{property}
         method: put
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   searchSpending:
     handler: handler/spending.search
@@ -101,9 +114,9 @@ functions:
     - http:
         path: checking-account/{id}/spending/search
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   searchPeriodical:
     handler: handler/periodical.search
@@ -111,9 +124,9 @@ functions:
     - http:
         path: checking-account/{id}/periodical/search
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   searchTitles:
     handler: handler/checkingAccount.searchTitles
@@ -121,9 +134,9 @@ functions:
     - http:
         path: checking-account/{id}/titles/search
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   updateSpending:
     handler: handler/spending.update
@@ -131,9 +144,9 @@ functions:
     - http:
         path: spending/{id}
         method: put
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   getSpending:
     handler: handler/spending.get
@@ -141,9 +154,9 @@ functions:
     - http:
         path: spending/{id}
         method: get
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   deleteSpending:
     handler: handler/spending.delete
@@ -151,9 +164,9 @@ functions:
     - http:
         path: spending/{id}
         method: delete
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
   getReport:
     handler: handler/report.get
@@ -161,9 +174,9 @@ functions:
     - http:
         path: checking-account/{id}/report
         method: post
-        cors: true
+        cors: ${self:custom.cors}
         authorizer:
-          arn: ${self:custom.userPoolArn}
+          arn: ${self:custom.config.userPoolArn}
 
 resources:
   Resources:
