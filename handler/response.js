@@ -32,7 +32,7 @@ module.exports = {
     callback(null, {
       statusCode,
       headers: h(body),
-      body: JSON.stringify(body)
+      body
     })
   },
   successHandler: callback => (body, headers = {}, statusCodeWithBody = 200) => {
