@@ -13,11 +13,10 @@ class PeriodicalModel extends AggregateRoot {
    * @param {Boolean} estimate
    * @param {Date} startsAt
    * @param {Number} enabledIn
-   * @param {Boolean} saving
    * @param {AggregateMeta} meta
    * @throws TypeError if the creation fails due to invalid payload
    */
-  constructor (checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving = false, meta) {
+  constructor (checkingAccount, category, title, amount, estimate, startsAt, enabledIn, meta) {
     super(meta)
     this.checkingAccount = NonEmptyString(checkingAccount, ['PeriodicalModel', 'checkingAccount:String'])
     this.category = NonEmptyString(category, ['PeriodicalModel', 'category:String'])
@@ -26,7 +25,6 @@ class PeriodicalModel extends AggregateRoot {
     this.estimate = BooleanType(estimate, ['PeriodicalModel', 'estimate:Boolean'])
     this.startsAt = MaybeDateType(startsAt, ['PeriodicalModel', 'startsAt:Date'])
     this.enabledIn = IntegerType(enabledIn || PeriodicalModel.monthFlags.reduce((all, flag) => all | flag, 0), ['PeriodicalModel', 'enabledIn:Integer'])
-    this.saving = BooleanType(saving, ['PeriodicalModel', 'saving:Boolean'])
   }
 
   /**
@@ -35,7 +33,7 @@ class PeriodicalModel extends AggregateRoot {
    * @throws TypeError if the creation fails due to invalid payload
    * @returns {ModelEvent} the create event
    */
-  static create ({checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving = false}, meta) {
+  static create ({checkingAccount, category, title, amount, estimate, startsAt, enabledIn}, meta) {
     const s = [].concat.bind(['PeriodicalModel', 'create()'])
     return new ModelEvent(
       meta.id,
@@ -48,8 +46,7 @@ class PeriodicalModel extends AggregateRoot {
         amount: IntegerType(amount, s('amount:Integer')),
         estimate: BooleanType(estimate, s('estimate:Boolean')),
         startsAt: MaybeDateType(startsAt, s('startsAt:Date')),
-        enabledIn: IntegerType(enabledIn || PeriodicalModel.monthFlags.reduce((all, flag) => all | flag, 0), s('enabledIn:Integer')),
-        saving: BooleanType(saving, s('saving:Boolean'))
+        enabledIn: IntegerType(enabledIn || PeriodicalModel.monthFlags.reduce((all, flag) => all | flag, 0), s('enabledIn:Integer'))
       },
       meta.createdAt
     )
@@ -64,10 +61,10 @@ class PeriodicalModel extends AggregateRoot {
    * @throws UnhandledDomainEventError
    */
   static applyEvent (event, periodical) {
-    const {name, payload: {checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving}, createdAt, aggregateId} = event
+    const {name, payload: {checkingAccount, category, title, amount, estimate, startsAt, enabledIn}, createdAt, aggregateId} = event
     switch (name) {
       case PeriodicalCreatedEvent:
-        return new PeriodicalModel(checkingAccount, category, title, amount, estimate, startsAt ? new Date(startsAt) : undefined, enabledIn, saving, new AggregateMeta(aggregateId, 1, createdAt))
+        return new PeriodicalModel(checkingAccount, category, title, amount, estimate, startsAt ? new Date(startsAt) : undefined, enabledIn, new AggregateMeta(aggregateId, 1, createdAt))
       default:
         throw new UnhandledDomainEventError(event.name)
     }

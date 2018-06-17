@@ -26,8 +26,7 @@ class CreateMonthlySpendingsCommand {
         title: periodical.title,
         amount: periodical.amount,
         booked: false,
-        bookedAt: month,
-        saving: periodical.saving
+        bookedAt: month
       }))
   }
 }

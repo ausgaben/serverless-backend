@@ -13,11 +13,10 @@ class SpendingModel extends AggregateRoot {
    * @param {Number} amount
    * @param {Boolean} booked
    * @param {Date} bookedAt
-   * @param {Boolean} saving
    * @param {AggregateMeta} meta
    * @throws TypeError if the creation fails due to invalid payload
    */
-  constructor (checkingAccount, category, title, amount, booked = false, bookedAt, saving = false, meta) {
+  constructor (checkingAccount, category, title, amount, booked = false, bookedAt, meta) {
     super(meta)
     this.checkingAccount = NonEmptyString(checkingAccount, ['SpendingModel', 'checkingAccount:String'])
     this.category = NonEmptyString(category, ['SpendingModel', 'category:String'])
@@ -25,7 +24,6 @@ class SpendingModel extends AggregateRoot {
     this.amount = IntegerType(amount, ['SpendingModel', 'amount:Integer'])
     this.booked = BooleanType(booked, ['SpendingModel', 'booked:Boolean'])
     this.bookedAt = MaybeDateType(bookedAt, ['SpendingModel', 'Date:Date'])
-    this.saving = BooleanType(saving, ['SpendingModel', 'saving:Boolean'])
   }
 
   /**
@@ -34,7 +32,7 @@ class SpendingModel extends AggregateRoot {
    * @throws TypeError if the creation fails due to invalid payload
    * @returns {ModelEvent} the create event
    */
-  static create ({checkingAccount, category, title, amount, booked = false, bookedAt, saving = false}, meta) {
+  static create ({checkingAccount, category, title, amount, booked = false, bookedAt}, meta) {
     const s = [].concat.bind(['SpendingModel', 'create()'])
     return new ModelEvent(
       meta.id,
@@ -46,8 +44,7 @@ class SpendingModel extends AggregateRoot {
         title: NonEmptyString(title, s('title:String')),
         amount: IntegerType(amount, s('amount:Integer')),
         booked: BooleanType(booked, s('booked:Boolean')),
-        bookedAt: MaybeDateType(bookedAt, s('Date:Date')),
-        saving: BooleanType(saving, s('saving:Boolean'))
+        bookedAt: MaybeDateType(bookedAt, s('Date:Date'))
       },
       meta.createdAt
     )
@@ -57,7 +54,7 @@ class SpendingModel extends AggregateRoot {
    * @param {Object} payload
    * @returns {ModelEvent}
    */
-  update ({category, title, amount, booked, bookedAt, saving}) {
+  update ({category, title, amount, booked, bookedAt}) {
     const s = [].concat.bind(['SpendingModel', 'update()'])
     return new ModelEvent(
       this.meta.id,
@@ -68,8 +65,7 @@ class SpendingModel extends AggregateRoot {
         title: title !== undefined ? NonEmptyString(title, s('title:String')) : this.title,
         amount: amount !== undefined ? IntegerType(amount, s('amount:Integer')) : this.amount,
         booked: booked !== undefined ? BooleanType(booked, s('booked:Boolean')) : this.booked,
-        bookedAt: bookedAt ? bookedAt.toISOString() : (this.bookedAt ? DateType(this.bookedAt, s('bookedAt:Date')).toISOString() : undefined),
-        saving: saving !== undefined ? BooleanType(saving, s('saving:Boolean')) : this.saving
+        bookedAt: bookedAt ? bookedAt.toISOString() : (this.bookedAt ? DateType(this.bookedAt, s('bookedAt:Date')).toISOString() : undefined)
       })
   }
 
@@ -89,17 +85,17 @@ class SpendingModel extends AggregateRoot {
    * @throws UnhandledDomainEventError
    */
   static applyEvent (event, spending) {
-    const {name, payload: {checkingAccount, category, title, amount, booked, bookedAt, saving}, createdAt, aggregateId} = event
+    const {name, payload: {checkingAccount, category, title, amount, booked, bookedAt}, createdAt, aggregateId} = event
     switch (name) {
       case SpendingCreatedEvent:
-        return new SpendingModel(checkingAccount, category, title, amount, booked, bookedAt ? new Date(bookedAt) : undefined, saving, new AggregateMeta(aggregateId, 1, createdAt))
+        return new SpendingModel(checkingAccount, category, title, amount, booked, bookedAt ? new Date(bookedAt) : undefined, new AggregateMeta(aggregateId, 1, createdAt))
       case SpendingDeletedEvent:
-        return new SpendingModel(spending.checkingAccount, spending.category, spending.title, spending.amount, spending.booked, spending.bookedAt, spending.saving, spending.meta.deleted(createdAt))
+        return new SpendingModel(spending.checkingAccount, spending.category, spending.title, spending.amount, spending.booked, spending.bookedAt, spending.meta.deleted(createdAt))
       case SpendingUpdatedEvent:
         const d = {
-          category, title, amount, booked, bookedAt, saving
+          category, title, amount, booked, bookedAt
         }
-        return new SpendingModel(spending.checkingAccount, d.category, d.title, d.amount, d.booked, d.bookedAt ? new Date(d.bookedAt) : undefined, d.saving, spending.meta.updated(createdAt))
+        return new SpendingModel(spending.checkingAccount, d.category, d.title, d.amount, d.booked, d.bookedAt ? new Date(d.bookedAt) : undefined, spending.meta.updated(createdAt))
       default:
         throw new UnhandledDomainEventError(event.name)
     }

@@ -30,7 +30,7 @@
     "toposort": "^2.0.2"
   },
   "dependencies": {
-    "@ausgaben/models": "^2.1.1",
+    "@ausgaben/models": "^2.2.0",
     "@rheactorjs/event-store-dynamodb": "^2.3.3",
     "@rheactorjs/models": "^3.0.1",
     "bluebird": "^3.5.1",

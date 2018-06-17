@@ -74,7 +74,7 @@ class Ausgaben {
       .then(() => undefined)
   }
 
-  createSpending (user, checkingAccountId, category, title, amount, booked = false, bookedAt, saving = false) {
+  createSpending (user, checkingAccountId, category, title, amount, booked = false, bookedAt) {
     return this.getById(user, checkingAccountId)
       .then(() => this.spendingRepo.add({
         checkingAccount: checkingAccountId,
@@ -82,14 +82,13 @@ class Ausgaben {
         title,
         amount,
         booked,
-        bookedAt,
-        saving
+        bookedAt
       }))
       .then(event => this.indexSpending(event.aggregateId))
       .then(() => undefined)
   }
 
-  updateSpending (user, id, version, category, title, amount, booked, bookedAt, saving) {
+  updateSpending (user, id, version, category, title, amount, booked, bookedAt) {
     return this.getSpendingById(user, id)
       .then(checkVersion(version))
       .then(spending => this.spendingRepo.update(spending, {
@@ -97,8 +96,7 @@ class Ausgaben {
         title,
         amount,
         booked,
-        bookedAt,
-        saving
+        bookedAt
       }))
       .then(event => this.indexSpending(event.aggregateId))
       .then(() => undefined)
@@ -141,11 +139,7 @@ class Ausgaben {
           if (spending.amount >= 0) {
             report.income += spending.amount
           } else {
-            if (spending.saving) {
-              report.savings += spending.amount
-            } else {
-              report.spendings += spending.amount
-            }
+            report.spendings += spending.amount
           }
           return report
         }, new ReportModel(checkingAccount.meta.id))
@@ -184,7 +178,6 @@ class Ausgaben {
     amount,
     estimate = false,
     startsAt,
-    saving = false,
     enabledIn01 = false,
     enabledIn02 = false,
     enabledIn03 = false,
@@ -205,7 +198,6 @@ class Ausgaben {
         amount,
         estimate,
         startsAt,
-        saving,
         enabledIn01,
         enabledIn02,
         enabledIn03,

@@ -48,7 +48,6 @@ Feature: Monthly Spendings
     Then "spendings" should equal -24197
     Then "income" should equal 5555
     Then "balance" should equal -18642
-    Then "savings" should equal 0
 
   Scenario: Change the monthly flag on an account
 
