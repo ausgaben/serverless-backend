@@ -18,7 +18,8 @@ Feature: Spendings
     "title": "<title>",
     "amount": <amount>,
     "booked": <booked>,
-    "bookedAt": "<bookedAt>"
+    "bookedAt": "<bookedAt>",
+    "saving": <saving>
     }
     """
     Then the status code should be 202
@@ -32,14 +33,16 @@ Feature: Spendings
     And "amount" of the item matching title:"<title>" should equal <amount>
     And "booked" of the item matching title:"<title>" should equal <booked>
     And "bookedAt" of the item matching title:"<title>" should equal "<bookedAt>"
+    And "saving" of the item matching title:"<title>" should equal <saving>
     And I store "$id" of the item matching title:"<title>" as "<store>Spending"
 
     Examples:
-      | category | title          | amount | booked | bookedAt                 | numItems | store        |
-      | Pets     | Cat food       | -12345 | true   | 2015-01-02T00:00:00.000Z | 1        | catFood      |
-      | Pets     | Dog food       | -5678  | true   | 2015-01-03T00:00:00.000Z | 2        | dogFood      |
-      | Salary   | Markus' Salary | 23456  | true   | 2015-01-04T00:00:00.000Z | 3        | markusSalary |
-      | Salary   | Tanja's Salary | 4321   | false  | 2015-01-04T00:00:00.000Z | 4        | tanjasSalary |
+      | category | title          | amount | booked | bookedAt                 | saving | numItems | store        |
+      | Pets     | Cat food       | -12345 | true   | 2015-01-02T00:00:00.000Z | false  | 1        | catFood      |
+      | Pets     | Dog food       | -5678  | true   | 2015-01-03T00:00:00.000Z | false  | 2        | dogFood      |
+      | Salary   | Markus' Salary | 23456  | true   | 2015-01-04T00:00:00.000Z | false  | 3        | markusSalary |
+      | Salary   | Tanja's Salary | 4321   | false  | 2015-01-04T00:00:00.000Z | false  | 4        | tanjasSalary |
+      | Savings  | Pension Fund   | -326   | true   | 2015-01-04T00:00:00.000Z | true   | 5        | pensionFund  |
 
   Scenario: Fetch summary for the account
 
@@ -49,7 +52,8 @@ Feature: Spendings
     And "$context" should equal "https://github.com/ausgaben/ausgaben-rheactor/wiki/JsonLD#Report"
     Then "spendings" should equal -18023
     Then "income" should equal 23456
-    Then "balance" should equal 5433
+    Then "savings" should equal -326
+    Then "balance" should equal 5107
 
   Scenario: Update spending
 
@@ -72,7 +76,8 @@ Feature: Spendings
     Then the status code should be 200
     Then "spendings" should equal -18023
     Then "income" should equal 27777
-    Then "balance" should equal 9754
+    Then "savings" should equal -326
+    Then "balance" should equal 9428
 
   Scenario: Delete spending
 
@@ -87,4 +92,5 @@ Feature: Spendings
     Then the status code should be 200
     Then "spendings" should equal -12345
     Then "income" should equal 27777
-    Then "balance" should equal 15432
+    Then "savings" should equal -326
+    Then "balance" should equal 15106

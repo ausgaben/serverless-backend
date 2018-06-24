@@ -33,7 +33,8 @@ const presentPeriodical = relations => aggregate => new Periodical({
   enabledIn09: !!(aggregate.enabledIn & PeriodicalModel.monthFlags[8]),
   enabledIn10: !!(aggregate.enabledIn & PeriodicalModel.monthFlags[9]),
   enabledIn11: !!(aggregate.enabledIn & PeriodicalModel.monthFlags[10]),
-  enabledIn12: !!(aggregate.enabledIn & PeriodicalModel.monthFlags[11])
+  enabledIn12: !!(aggregate.enabledIn & PeriodicalModel.monthFlags[11]),
+  saving: aggregate.saving
 })
 
 module.exports = {
@@ -49,6 +50,7 @@ module.exports = {
             amount: Integer.required(),
             estimate: Boolean.default(false),
             startsAt: Joi.date(),
+            saving: Boolean.default(false),
             enabledIn01: Boolean.default(false),
             enabledIn02: Boolean.default(false),
             enabledIn03: Boolean.default(false),
@@ -71,6 +73,7 @@ module.exports = {
         amount,
         estimate,
         startsAt,
+        saving,
         enabledIn01,
         enabledIn02,
         enabledIn03,
@@ -91,6 +94,7 @@ module.exports = {
         amount,
         estimate,
         startsAt,
+        saving,
         enabledIn01,
         enabledIn02,
         enabledIn03,

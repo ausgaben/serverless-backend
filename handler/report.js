@@ -12,6 +12,7 @@ const presentReport = relations => aggregate => new Report({
   balance: aggregate.balance,
   income: aggregate.income,
   spendings: aggregate.spendings,
+  savings: aggregate.savings,
   checkingAccount: new Reference(relations.createId(CheckingAccount.$context, aggregate.checkingAccount), CheckingAccount.$context)
 })
 

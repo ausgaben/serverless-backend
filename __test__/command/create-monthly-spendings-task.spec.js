@@ -39,6 +39,7 @@ describe('CreateMonthlySpendingsCommand', () => {
     false,
     new Date('2015-01-01'),
     undefined,
+    false,
     new AggregateMeta('1', 1)
   )
 
@@ -50,6 +51,7 @@ describe('CreateMonthlySpendingsCommand', () => {
     false,
     new Date('2015-01-02'),
     undefined,
+    false,
     new AggregateMeta('1', 1)
   )
 

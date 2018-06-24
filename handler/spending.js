@@ -20,7 +20,8 @@ const presentSpending = relations => aggregate => new Spending({
   title: aggregate.title,
   amount: aggregate.amount,
   booked: aggregate.booked,
-  bookedAt: aggregate.bookedAt ? new Date(aggregate.bookedAt) : undefined
+  bookedAt: aggregate.bookedAt ? new Date(aggregate.bookedAt) : undefined,
+  saving: aggregate.saving
 })
 
 module.exports = {
@@ -35,11 +36,12 @@ module.exports = {
             title: NonEmptyString.required(),
             amount: Integer.required(),
             booked: Boolean.required(),
-            bookedAt: Joi.date()
+            bookedAt: Joi.date(),
+            saving: Boolean.default(false)
           })),
         authorize(event)
       ])
-      .then(([{checkingAccountId, category, title, amount, booked, bookedAt}, user]) => service(context).createSpending(user, checkingAccountId, category, title, amount, booked, bookedAt))
+      .then(([{checkingAccountId, category, title, amount, booked, bookedAt, saving}, user]) => service(context).createSpending(user, checkingAccountId, category, title, amount, booked, bookedAt, saving))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
@@ -89,12 +91,13 @@ module.exports = {
             amount: Integer,
             booked: Boolean,
             bookedAt: Joi.date(),
+            saving: Boolean,
             version: Integer.required()
           })
         ),
         authorize(event)
       ])
-      .then(([{id, category, title, amount, booked, bookedAt, version}, user]) => service(context).updateSpending(user, id, version, category, title, amount, booked, bookedAt))
+      .then(([{id, category, title, amount, booked, bookedAt, saving, version}, user]) => service(context).updateSpending(user, id, version, category, title, amount, booked, bookedAt, saving))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
