@@ -32,7 +32,7 @@
   "dependencies": {
     "@ausgaben/models": "^2.1.1",
     "@rheactorjs/event-store-dynamodb": "^2.3.3",
-    "@rheactorjs/models": "^3.0.1",
+    "@rheactorjs/models": "^4.0.0",
     "bluebird": "^3.5.1",
     "joi": "^13.4.0",
     "tcomb": "^3.2.27",
