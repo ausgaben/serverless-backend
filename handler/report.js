@@ -5,7 +5,7 @@ const Joi = require('joi')
 const {joi: {validate, NonEmptyString}, authorize, checkingAccountService: service} = require('./util')
 const {relations} = require('./jsonld')
 const {Report, CheckingAccount} = require('@ausgaben/models')
-const {Reference} = require('@rheactorjs/models')
+const {Reference, ID} = require('@rheactorjs/models')
 const {URIValue} = require('@rheactorjs/value-objects')
 
 const presentReport = relations => aggregate => new Report({
@@ -13,7 +13,10 @@ const presentReport = relations => aggregate => new Report({
   income: aggregate.income,
   spendings: aggregate.spendings,
   savings: aggregate.savings,
-  checkingAccount: new Reference(relations.createId(CheckingAccount.$context, aggregate.checkingAccount), CheckingAccount.$context)
+  checkingAccount: new Reference(new ID(
+    aggregate.checkingAccount,
+    relations.createIdLink(CheckingAccount.$context, aggregate.checkingAccount)
+  ), CheckingAccount.$context)
 })
 
 module.exports = {

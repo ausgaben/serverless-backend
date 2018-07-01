@@ -3,14 +3,17 @@
 const {successHandler, errorHandler} = require('./response')
 const {Pagination} = require('@rheactorjs/event-store-dynamodb')
 const Joi = require('joi')
-const {List} = require('@rheactorjs/models')
+const {List, ID} = require('@rheactorjs/models')
 const {URIValue} = require('@rheactorjs/value-objects')
 const {Spending} = require('@ausgaben/models')
 const {relations} = require('./jsonld')
 const {joi: {validate, NonEmptyString, Integer, Boolean}, authorize, checkingAccountService: service} = require('./util')
 
 const presentSpending = relations => aggregate => new Spending({
-  $id: relations.createId(Spending.$context, aggregate.meta.id),
+  $id: new ID(
+    aggregate.meta.id,
+    relations.createIdLink(Spending.$context, aggregate.meta.id)
+  ),
   $version: aggregate.meta.version,
   $links: relations.createLinks(Spending.$context, aggregate.meta.id),
   $createdAt: aggregate.meta.createdAt,

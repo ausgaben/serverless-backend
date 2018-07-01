@@ -9,9 +9,10 @@ const readFile = Promise.promisify(readFileAsync)
 const {createStore, combineReducers} = require('redux')
 const toposort = require('toposort')
 const jwt = require('jsonwebtoken')
-const {URIValue, EmailValue} = require('@rheactorjs/value-objects')
-const {List} = require('@rheactorjs/models')
+const {EmailValue} = require('@rheactorjs/value-objects')
+const {ID, List} = require('@rheactorjs/models')
 const uuid = require('uuid')
+const jsonata = require('jsonata')
 
 const {dynamoDB, close} = require('@rheactorjs/event-store-dynamodb/test/helper')
 const {User, Link} = require('@rheactorjs/models')
@@ -164,7 +165,12 @@ const endpoints = [
   {
     path: /^PUT \/checking-account\/([^/]+)\/([^/]+)$/,
     handler: (event, context, callback) => {
-      checkingAccountHandler.update(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2], property: event.path.split('/')[3]}}), context, callback)
+      checkingAccountHandler.update(Object.assign({}, event, {
+        pathParameters: {
+          id: event.path.split('/')[2],
+          property: event.path.split('/')[3]
+        }
+      }), context, callback)
     }
   },
   {
@@ -356,10 +362,12 @@ class ServerlessContext {
       return Promise
         .try(() => {
           const body = store.getState().response.body
-          expect(body).toHaveProperty(match[1])
+          const e = jsonata(match[1])
+          const value = e.evaluate(body)
+          expect(value).toBeDefined()
           store.dispatch({
             type: 'STORE',
-            value: body[match[1]],
+            value: value,
             key: match[2]
           })
         })
@@ -371,10 +379,12 @@ class ServerlessContext {
       return Promise
         .try(() => {
           const item = store.getState().response.body.items.find(item => item[match[2]] === match[3])
-          expect(item).toHaveProperty(match[1])
+          const e = jsonata(match[1])
+          const value = e.evaluate(item)
+          expect(value).toBeDefined()
           store.dispatch({
             type: 'STORE',
-            value: item[match[1]],
+            value: value,
             key: match[4]
           })
         })
@@ -431,7 +441,7 @@ class ServerlessContext {
       const token = this.createToken(email, name)
       const sub = JSON.parse(Buffer.from(token.split('.')[1], 'base64')).sub
       userRepo.users[sub] = new User({
-        $id: new URIValue(`${process.env.API_ENDPOINT}/user/${email}`),
+        $id: new ID(sub, `${process.env.API_ENDPOINT}/user/${sub}`),
         $version: 1,
         $createdAt: new Date(),
         email: new EmailValue(email),
@@ -463,7 +473,7 @@ class ServerlessContext {
       {
         algorithm: 'HS256',
         issuer: 'https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_123456abc',
-        subject: Buffer.from(email).toString('base64'), //  The UUID of the authenticated user. This is not the same as username.
+        subject: uuid.v4(), //  The UUID of the authenticated user. This is not the same as username.
         audience: '123456789abcdefghijklmnopq', // Contains the client_id with which the user authenticated.
         expiresIn: '1h'
       }
@@ -487,8 +497,8 @@ beforeAll(() => dynamoDB()
     app.dynamoDB = dynamoDB
   }))
 
-afterAll(close)
-afterAll(() => {
+afterAll(async () => {
+  await close()
   const {steps, response, proxyEvent} = rootStore.getState()
   if (steps.failed) {
     console.error(

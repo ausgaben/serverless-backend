@@ -18,7 +18,7 @@ describe('CheckingAccountRepository', () => {
       )
     }))
 
-  afterAll(close)
+  afterAll(async () => { await close() })
 
   it('should persist', (done) => {
     Promise

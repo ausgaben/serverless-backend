@@ -29,7 +29,7 @@ describe('CreateMonthlySpendingsCommand', () => {
       )
     }))
 
-  afterAll(close)
+  afterAll(async () => { await close() })
 
   let periodical1 = new PeriodicalModel(
     '4242',

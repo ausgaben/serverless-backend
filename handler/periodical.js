@@ -3,7 +3,7 @@
 const {successHandler, errorHandler} = require('./response')
 const {Pagination} = require('@rheactorjs/event-store-dynamodb')
 const Joi = require('joi')
-const {List} = require('@rheactorjs/models')
+const {List, ID} = require('@rheactorjs/models')
 const {URIValue} = require('@rheactorjs/value-objects')
 const {Periodical} = require('@ausgaben/models')
 const {PeriodicalModel} = require('../model/periodical')
@@ -11,7 +11,10 @@ const {relations} = require('./jsonld')
 const {joi: {validate, NonEmptyString, Integer, Boolean}, authorize, checkingAccountService: service} = require('./util')
 
 const presentPeriodical = relations => aggregate => new Periodical({
-  $id: relations.createId(Periodical.$context, aggregate.meta.id),
+  $id: new ID(
+    aggregate.meta.id,
+    relations.createIdLink(Periodical.$context, aggregate.meta.id)
+  ),
   $version: aggregate.meta.version,
   $links: relations.createLinks(Periodical.$context, aggregate.meta.id),
   $createdAt: aggregate.meta.createdAt,

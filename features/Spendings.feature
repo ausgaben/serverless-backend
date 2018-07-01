@@ -34,7 +34,7 @@ Feature: Spendings
     And "booked" of the item matching title:"<title>" should equal <booked>
     And "bookedAt" of the item matching title:"<title>" should equal "<bookedAt>"
     And "saving" of the item matching title:"<title>" should equal <saving>
-    And I store "$id" of the item matching title:"<title>" as "<store>Spending"
+    And I store "$lookup($$, '$id').url" of the item matching title:"<title>" as "<store>Spending"
 
     Examples:
       | category | title          | amount | booked | bookedAt                 | saving | numItems | store        |
