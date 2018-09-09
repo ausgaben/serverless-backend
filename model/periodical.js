@@ -1,7 +1,7 @@
-const {AggregateRoot, NonEmptyString, AggregateMeta, ModelEvent} = require('@rheactorjs/event-store-dynamodb')
-const {UnhandledDomainEventError} = require('@rheactorjs/errors')
-const {irreducible, Boolean: BooleanType, Integer: IntegerType, maybe, Date: DateType} = require('tcomb')
-const {PeriodicalCreatedEvent} = require('./events')
+const { AggregateRoot, NonEmptyString, AggregateMeta, ModelEvent } = require('@rheactorjs/event-store-dynamodb')
+const { UnhandledDomainEventError } = require('@rheactorjs/errors')
+const { irreducible, Boolean: BooleanType, Integer: IntegerType, maybe, Date: DateType } = require('tcomb')
+const { PeriodicalCreatedEvent } = require('./events')
 const MaybeDateType = maybe(DateType, 'MaybeDateType')
 
 class PeriodicalModel extends AggregateRoot {
@@ -35,7 +35,7 @@ class PeriodicalModel extends AggregateRoot {
    * @throws TypeError if the creation fails due to invalid payload
    * @returns {ModelEvent} the create event
    */
-  static create ({checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving = false}, meta) {
+  static create ({ checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving = false }, meta) {
     const s = [].concat.bind(['PeriodicalModel', 'create()'])
     return new ModelEvent(
       meta.id,
@@ -64,7 +64,7 @@ class PeriodicalModel extends AggregateRoot {
    * @throws UnhandledDomainEventError
    */
   static applyEvent (event, periodical) {
-    const {name, payload: {checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving}, createdAt, aggregateId} = event
+    const { name, payload: { checkingAccount, category, title, amount, estimate, startsAt, enabledIn, saving }, createdAt, aggregateId } = event
     switch (name) {
       case PeriodicalCreatedEvent:
         return new PeriodicalModel(checkingAccount, category, title, amount, estimate, startsAt ? new Date(startsAt) : undefined, enabledIn, saving, new AggregateMeta(aggregateId, 1, createdAt))

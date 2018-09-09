@@ -1,7 +1,7 @@
-const {AggregateRoot, ModelEvent, AggregateMeta, NonEmptyString} = require('@rheactorjs/event-store-dynamodb')
-const {UnhandledDomainEventError} = require('@rheactorjs/errors')
-const {SpendingCreatedEvent, SpendingUpdatedEvent, SpendingDeletedEvent} = require('./events')
-const {Boolean: BooleanType, Integer: IntegerType, maybe, Date: DateType, irreducible} = require('tcomb')
+const { AggregateRoot, ModelEvent, AggregateMeta, NonEmptyString } = require('@rheactorjs/event-store-dynamodb')
+const { UnhandledDomainEventError } = require('@rheactorjs/errors')
+const { SpendingCreatedEvent, SpendingUpdatedEvent, SpendingDeletedEvent } = require('./events')
+const { Boolean: BooleanType, Integer: IntegerType, maybe, Date: DateType, irreducible } = require('tcomb')
 
 const MaybeDateType = maybe(DateType, 'MaybeDateType')
 
@@ -34,7 +34,7 @@ class SpendingModel extends AggregateRoot {
    * @throws TypeError if the creation fails due to invalid payload
    * @returns {ModelEvent} the create event
    */
-  static create ({checkingAccount, category, title, amount, booked = false, bookedAt, saving = false}, meta) {
+  static create ({ checkingAccount, category, title, amount, booked = false, bookedAt, saving = false }, meta) {
     const s = [].concat.bind(['SpendingModel', 'create()'])
     return new ModelEvent(
       meta.id,
@@ -57,7 +57,7 @@ class SpendingModel extends AggregateRoot {
    * @param {Object} payload
    * @returns {ModelEvent}
    */
-  update ({category, title, amount, booked, bookedAt, saving}) {
+  update ({ category, title, amount, booked, bookedAt, saving }) {
     const s = [].concat.bind(['SpendingModel', 'update()'])
     return new ModelEvent(
       this.meta.id,
@@ -89,7 +89,7 @@ class SpendingModel extends AggregateRoot {
    * @throws UnhandledDomainEventError
    */
   static applyEvent (event, spending) {
-    const {name, payload: {checkingAccount, category, title, amount, booked, bookedAt, saving}, createdAt, aggregateId} = event
+    const { name, payload: { checkingAccount, category, title, amount, booked, bookedAt, saving }, createdAt, aggregateId } = event
     switch (name) {
       case SpendingCreatedEvent:
         return new SpendingModel(checkingAccount, category, title, amount, booked, bookedAt ? new Date(bookedAt) : undefined, saving, new AggregateMeta(aggregateId, 1, createdAt))
@@ -108,4 +108,4 @@ class SpendingModel extends AggregateRoot {
 
 const SpendingModelType = irreducible('SpendingModelType', x => x instanceof SpendingModel)
 
-module.exports = {SpendingModel, SpendingModelType}
+module.exports = { SpendingModel, SpendingModelType }

@@ -1,7 +1,7 @@
-const {UnhandledDomainEventError} = require('@rheactorjs/errors')
-const {AggregateRoot, ModelEvent, AggregateMeta, NonEmptyString} = require('@rheactorjs/event-store-dynamodb')
-const {CheckingAccountUpdatedEvent, CheckingAccountCreatedEvent} = require('./events')
-const {Boolean: BooleanType} = require('tcomb')
+const { UnhandledDomainEventError } = require('@rheactorjs/errors')
+const { AggregateRoot, ModelEvent, AggregateMeta, NonEmptyString } = require('@rheactorjs/event-store-dynamodb')
+const { CheckingAccountUpdatedEvent, CheckingAccountCreatedEvent } = require('./events')
+const { Boolean: BooleanType } = require('tcomb')
 const t = require('tcomb')
 const NonEmptyListOfNonEmptyStrings = t.refinement(t.list(NonEmptyString), l => l.length > 0, 'NonEmptyListOfNonEmptyStrings')
 
@@ -30,7 +30,7 @@ class CheckingAccountModel extends AggregateRoot {
    * @throws TypeError if the creation fails due to invalid payload
    * @returns {ModelEvent} the create event
    */
-  static create ({name, users, currency = '€', monthly = false, savings = false}, meta) {
+  static create ({ name, users, currency = '€', monthly = false, savings = false }, meta) {
     const s = [].concat.bind(['CheckingAccountModel', 'create()'])
     return new ModelEvent(
       meta.id,
@@ -51,7 +51,7 @@ class CheckingAccountModel extends AggregateRoot {
    * @param {Object} payload
    * @returns {ModelEvent}
    */
-  update ({name, currency, users, monthly, savings}) {
+  update ({ name, currency, users, monthly, savings }) {
     const s = [].concat.bind(['CheckingAccountModel', 'update()'])
     return new ModelEvent(
       this.meta.id,
@@ -75,7 +75,7 @@ class CheckingAccountModel extends AggregateRoot {
    * @throws UnhandledDomainEventError
    */
   static applyEvent (event, checkingAccount) {
-    const {payload: {name, currency, users, monthly, savings}, createdAt, aggregateId} = event
+    const { payload: { name, currency, users, monthly, savings }, createdAt, aggregateId } = event
     switch (event.name) {
       case CheckingAccountCreatedEvent:
         return new CheckingAccountModel(name, currency, users, monthly, savings, new AggregateMeta(aggregateId, 1, createdAt))
@@ -91,4 +91,4 @@ class CheckingAccountModel extends AggregateRoot {
   }
 }
 
-module.exports = {CheckingAccountModel}
+module.exports = { CheckingAccountModel }

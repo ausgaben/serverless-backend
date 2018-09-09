@@ -1,8 +1,8 @@
 'use strict'
 
-const {Ausgaben} = require('../service/ausgaben')
-const {DynamoDB} = require('aws-sdk')
-const {ValidationFailedError} = require('@rheactorjs/errors')
+const { Ausgaben } = require('../service/ausgaben')
+const { DynamoDB } = require('aws-sdk')
+const { ValidationFailedError } = require('@rheactorjs/errors')
 const Joi = require('joi')
 
 const checkingAccountService = context => new Ausgaben(

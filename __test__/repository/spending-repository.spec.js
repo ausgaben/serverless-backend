@@ -1,10 +1,10 @@
 /* global describe expect it beforeAll afterAll */
 
-const {SpendingRepository} = require('../../repository/spending')
-const {AggregateSortIndex} = require('../../repository/aggregate-sort-index')
+const { SpendingRepository } = require('../../repository/spending')
+const { AggregateSortIndex } = require('../../repository/aggregate-sort-index')
 const Promise = require('bluebird')
-const {EventStore, AggregateRelation, ModelEvent} = require('@rheactorjs/event-store-dynamodb')
-const {dynamoDB, close} = require('@rheactorjs/event-store-dynamodb/test/helper')
+const { EventStore, AggregateRelation, ModelEvent } = require('@rheactorjs/event-store-dynamodb')
+const { dynamoDB, close } = require('@rheactorjs/event-store-dynamodb/test/helper')
 
 describe('SpendingRepository', () => {
   let spendingRepo

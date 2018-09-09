@@ -1,6 +1,6 @@
-const {JSONLD, JsonWebToken, Link, Status, User} = require('@rheactorjs/models')
-const {URIValue, URIValueType} = require('@rheactorjs/value-objects')
-const {CheckingAccount, Periodical, Report, Spending, Title} = require('@ausgaben/models')
+const { JSONLD, JsonWebToken, Link, Status, User } = require('@rheactorjs/models')
+const { URIValue, URIValueType } = require('@rheactorjs/value-objects')
+const { CheckingAccount, Periodical, Report, Spending, Title } = require('@ausgaben/models')
 // const {$context as streamContext} = require( '../api/stream')
 
 /**

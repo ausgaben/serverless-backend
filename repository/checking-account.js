@@ -1,7 +1,7 @@
-const {AggregateRepository, AggregateMeta} = require('@rheactorjs/event-store-dynamodb')
-const {CheckingAccountModel} = require('../model/checking-account')
-const {NonEmptyString} = require('@rheactorjs/event-store-dynamodb')
-const {v4} = require('uuid')
+const { AggregateRepository, AggregateMeta } = require('@rheactorjs/event-store-dynamodb')
+const { CheckingAccountModel } = require('../model/checking-account')
+const { NonEmptyString } = require('@rheactorjs/event-store-dynamodb')
+const { v4 } = require('uuid')
 
 /**
  * Creates a new checkingAccount repository
@@ -45,4 +45,4 @@ class CheckingAccountRepository extends AggregateRepository {
   }
 }
 
-module.exports = {CheckingAccountRepository}
+module.exports = { CheckingAccountRepository }

@@ -3,22 +3,22 @@
 const chalk = require('chalk')
 const Promise = require('bluebird')
 const g = require('glob')
-const {readFile: readFileAsync} = require('fs')
+const { readFile: readFileAsync } = require('fs')
 const glob = Promise.promisify(g)
 const readFile = Promise.promisify(readFileAsync)
-const {createStore, combineReducers} = require('redux')
+const { createStore, combineReducers } = require('redux')
 const toposort = require('toposort')
 const jwt = require('jsonwebtoken')
-const {EmailValue} = require('@rheactorjs/value-objects')
-const {ID, List} = require('@rheactorjs/models')
+const { EmailValue } = require('@rheactorjs/value-objects')
+const { ID, List } = require('@rheactorjs/models')
 const uuid = require('uuid')
 const jsonata = require('jsonata')
 
-const {dynamoDB, close} = require('@rheactorjs/event-store-dynamodb/test/helper')
-const {User, Link} = require('@rheactorjs/models')
+const { dynamoDB, close } = require('@rheactorjs/event-store-dynamodb/test/helper')
+const { User, Link } = require('@rheactorjs/models')
 const app = {}
 
-const stepReducer = (state = {stepCount: 0, failed: false}, {type, step, argument, keyword}) => {
+const stepReducer = (state = { stepCount: 0, failed: false }, { type, step, argument, keyword }) => {
   switch (type) {
     case 'STEP':
       return Object.assign(
@@ -62,7 +62,7 @@ const lambdaProxyEventReducer = (state = {
         {},
         state,
         {
-          headers: Object.assign({}, state.headers, {[action.name]: action.value})
+          headers: Object.assign({}, state.headers, { [action.name]: action.value })
         }
       )
       if (action.name === 'Authorization') {
@@ -74,7 +74,7 @@ const lambdaProxyEventReducer = (state = {
       }
       return newState
     case 'REQUEST_METHOD':
-      return Object.assign({}, state, {httpMethod: action.method})
+      return Object.assign({}, state, { httpMethod: action.method })
     case 'REQUEST_RESOURCE':
       return Object.assign({}, state, {
         path: action.path
@@ -84,13 +84,13 @@ const lambdaProxyEventReducer = (state = {
         queryStringParameters: action.queryStringParameters
       })
     case 'REQUEST_BODY':
-      return Object.assign({}, state, {body: JSON.stringify(action.body)})
+      return Object.assign({}, state, { body: JSON.stringify(action.body) })
     default:
       return state
   }
 }
 
-const defaultResponseState = {statusCode: -1, headers: {}, body: {}}
+const defaultResponseState = { statusCode: -1, headers: {}, body: {} }
 const lambdaResponseReducer = (state = defaultResponseState, action) => {
   switch (action.type) {
     case 'RESPONSE':
@@ -111,7 +111,7 @@ const lambdaResponseReducer = (state = defaultResponseState, action) => {
 const storageReducer = (state = {}, action) => {
   switch (action.type) {
     case 'STORE':
-      return Object.assign({}, state, {[action.key]: action.value})
+      return Object.assign({}, state, { [action.key]: action.value })
     default:
       return state
   }
@@ -131,7 +131,7 @@ const spendingHandler = require('../../handler/spending')
 const periodicalHandler = require('../../handler/periodical')
 const reportHandler = require('../../handler/report')
 const endpoints = [
-  {path: new RegExp(`GET /api`), handler: apiHandler.index},
+  { path: new RegExp(`GET /api`), handler: apiHandler.index },
   {
     path: /^POST \/me$/,
     handler: userHandler.me
@@ -147,19 +147,19 @@ const endpoints = [
   {
     path: /^GET \/checking-account\/(.+)$/,
     handler: (event, context, callback) => {
-      checkingAccountHandler.get(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)
+      checkingAccountHandler.get(Object.assign({}, event, { pathParameters: { id: event.path.split('/').pop() } }), context, callback)
     }
   },
   {
     path: /^POST \/checking-account\/([^/]+)\/spending$/,
     handler: (event, context, callback) => {
-      spendingHandler.create(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+      spendingHandler.create(Object.assign({}, event, { pathParameters: { id: event.path.split('/')[2] } }), context, callback)
     }
   },
   {
     path: /^POST \/checking-account\/([^/]+)\/periodical$/,
     handler: (event, context, callback) => {
-      periodicalHandler.create(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+      periodicalHandler.create(Object.assign({}, event, { pathParameters: { id: event.path.split('/')[2] } }), context, callback)
     }
   },
   {
@@ -176,43 +176,43 @@ const endpoints = [
   {
     path: /^POST \/checking-account\/([^/]+)\/spending\/search$/,
     handler: (event, context, callback) => {
-      spendingHandler.search(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+      spendingHandler.search(Object.assign({}, event, { pathParameters: { id: event.path.split('/')[2] } }), context, callback)
     }
   },
   {
     path: /^POST \/checking-account\/([^/]+)\/periodical\/search$/,
     handler: (event, context, callback) => {
-      periodicalHandler.search(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+      periodicalHandler.search(Object.assign({}, event, { pathParameters: { id: event.path.split('/')[2] } }), context, callback)
     }
   },
   {
     path: /^POST \/checking-account\/([^/]+)\/titles\/search$/,
     handler: (event, context, callback) => {
-      checkingAccountHandler.searchTitles(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+      checkingAccountHandler.searchTitles(Object.assign({}, event, { pathParameters: { id: event.path.split('/')[2] } }), context, callback)
     }
   },
   {
     path: /^PUT \/spending\/(.+)$/,
     handler: (event, context, callback) => {
-      spendingHandler.update(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)
+      spendingHandler.update(Object.assign({}, event, { pathParameters: { id: event.path.split('/').pop() } }), context, callback)
     }
   },
   {
     path: /^GET \/spending\/(.+)$/,
     handler: (event, context, callback) => {
-      spendingHandler.get(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)
+      spendingHandler.get(Object.assign({}, event, { pathParameters: { id: event.path.split('/').pop() } }), context, callback)
     }
   },
   {
     path: /^DELETE \/spending\/(.+)$/,
     handler: (event, context, callback) => {
-      spendingHandler.delete(Object.assign({}, event, {pathParameters: {id: event.path.split('/').pop()}}), context, callback)
+      spendingHandler.delete(Object.assign({}, event, { pathParameters: { id: event.path.split('/').pop() } }), context, callback)
     }
   },
   {
     path: /^POST \/checking-account\/([^/]+)\/report$/,
     handler: (event, context, callback) => {
-      reportHandler.get(Object.assign({}, event, {pathParameters: {id: event.path.split('/')[2]}}), context, callback)
+      reportHandler.get(Object.assign({}, event, { pathParameters: { id: event.path.split('/')[2] } }), context, callback)
     }
   }
 ]
@@ -226,24 +226,24 @@ class ServerlessContext {
     const headerRx = /^"([^"]+)" is the ([^ ]+) header$/
     if (headerRx.test(step)) {
       const match = step.match(headerRx)
-      store.dispatch({type: 'REQUEST_HEADER', name: match[2], value: match[1]})
+      store.dispatch({ type: 'REQUEST_HEADER', name: match[2], value: match[1] })
       return Promise.resolve()
     }
     const requestRx = /^I ([A-Z]+) (?:to )?([^ ]+)$/
     if (requestRx.test(step)) {
       const match = step.match(requestRx)
       const uri = new URL(match[2], process.env.API_ENDPOINT)
-      store.dispatch({type: 'REQUEST_METHOD', method: match[1]})
-      store.dispatch({type: 'REQUEST_RESOURCE', path: uri.pathname})
+      store.dispatch({ type: 'REQUEST_METHOD', method: match[1] })
+      store.dispatch({ type: 'REQUEST_RESOURCE', path: uri.pathname })
 
       const qsp = {}
       for (let [key, value] of uri.searchParams.entries()) {
         qsp[key] = value
       }
       if (Object.keys(qsp).length) {
-        store.dispatch({type: 'REQUEST_QUERY', queryStringParameters: qsp})
+        store.dispatch({ type: 'REQUEST_QUERY', queryStringParameters: qsp })
       } else {
-        store.dispatch({type: 'REQUEST_QUERY', queryStringParameters: null})
+        store.dispatch({ type: 'REQUEST_QUERY', queryStringParameters: null })
       }
       store.dispatch({
         type: 'REQUEST_BODY',
@@ -251,16 +251,16 @@ class ServerlessContext {
       })
 
       const r = `${match[1]} ${uri.pathname}`
-      const route = this.endpoints.find(({path}) => path.test(r))
+      const route = this.endpoints.find(({ path }) => path.test(r))
       if (!route) {
         throw new Error(`No handler matches "${r}"!`)
       }
 
       return new Promise((resolve, reject) => {
         Promise
-          .try(() => route.handler(store.getState().proxyEvent, {dynamoDB: app.dynamoDB}, (err, response) => {
+          .try(() => route.handler(store.getState().proxyEvent, { dynamoDB: app.dynamoDB }, (err, response) => {
             if (err) return reject(err)
-            store.dispatch({type: 'RESPONSE', response})
+            store.dispatch({ type: 'RESPONSE', response })
             return resolve()
           }))
           .catch(err => {
@@ -277,24 +277,24 @@ class ServerlessContext {
     const headerTestRx = /^the ([^ ]+) header should equal "([^"]+)"$/
     if (headerTestRx.test(step)) {
       const match = step.match(headerTestRx)
-      return Promise.try(() => expect(store.getState().response.headers).toMatchObject({[match[1]]: match[2]}))
+      return Promise.try(() => expect(store.getState().response.headers).toMatchObject({ [match[1]]: match[2] }))
     }
     const responseStringPropertyTestRx = /^"([^"]+)" should equal "([^"]+)"$/
     if (responseStringPropertyTestRx.test(step)) {
       const match = step.match(responseStringPropertyTestRx)
-      return Promise.try(() => expect(store.getState().response.body).toMatchObject({[match[1]]: match[2]}))
+      return Promise.try(() => expect(store.getState().response.body).toMatchObject({ [match[1]]: match[2] }))
     }
 
     const responseBooleanPropertyTestRx = /^"([^"]+)" should equal (true|false)$/
     if (responseBooleanPropertyTestRx.test(step)) {
       const match = step.match(responseBooleanPropertyTestRx)
-      return Promise.try(() => expect(store.getState().response.body).toMatchObject({[match[1]]: match[2] === 'true'}))
+      return Promise.try(() => expect(store.getState().response.body).toMatchObject({ [match[1]]: match[2] === 'true' }))
     }
 
     const responseIntegerPropertyTestRx = /^"([^"]+)" should equal (-?[0-9]+)$/
     if (responseIntegerPropertyTestRx.test(step)) {
       const match = step.match(responseIntegerPropertyTestRx)
-      return Promise.try(() => expect(store.getState().response.body).toMatchObject({[match[1]]: +match[2]}))
+      return Promise.try(() => expect(store.getState().response.body).toMatchObject({ [match[1]]: +match[2] }))
     }
 
     const responsePropertyExistTestRx = /^"([^"]+)" should (not )?exist$/
@@ -313,7 +313,7 @@ class ServerlessContext {
       return Promise.try(() => {
         const body = store.getState().response.body
         expect(body.$context).toEqual(List.$context.toString())
-        body.items.map(({$context}) => expect($context).toEqual(match[1]))
+        body.items.map(({ $context }) => expect($context).toEqual(match[1]))
         expect(body.items).toHaveLength(+match[2])
         expect(body.total).toEqual(+match[3])
       })
@@ -326,7 +326,7 @@ class ServerlessContext {
         .try(() => {
           const body = store.getState().response.body
           expect(body).toHaveProperty('$links')
-          const link = body.$links.find(({rel, subject}) => (/^https?:\/\//.test(match[1]) ? subject : rel) === match[1])
+          const link = body.$links.find(({ rel, subject }) => (/^https?:\/\//.test(match[1]) ? subject : rel) === match[1])
           expect(link).toBeDefined()
           store.dispatch({
             type: 'STORE',
@@ -343,7 +343,7 @@ class ServerlessContext {
         .try(() => {
           const body = store.getState().response.body
           expect(body).toHaveProperty('$links')
-          const link = body.$links.find(({subject}) => subject === match[1])
+          const link = body.$links.find(({ subject }) => subject === match[1])
           if (!link) {
             console.log(`Could not find a "${match[1]}" link in this list:`, body.$links)
           }
@@ -437,7 +437,7 @@ class ServerlessContext {
     const userPropertyRx = /the token for this user is stored as "([^"]+)"/
     if (userPropertyRx.test(step)) {
       const match = step.match(userPropertyRx)
-      const {email, name} = JSON.parse(argument)
+      const { email, name } = JSON.parse(argument)
       const token = this.createToken(email, name)
       const sub = JSON.parse(Buffer.from(token.split('.')[1], 'base64')).sub
       userRepo.users[sub] = new User({
@@ -499,7 +499,7 @@ beforeAll(() => dynamoDB()
 
 afterAll(async () => {
   await close()
-  const {steps, response, proxyEvent} = rootStore.getState()
+  const { steps, response, proxyEvent } = rootStore.getState()
   if (steps.failed) {
     console.error(
       [
@@ -524,7 +524,7 @@ const runFeatures = () => Promise
   .then(parsedFeatures => {
     // Sort the features by @After annotation using toposort
     const featureDependencies = parsedFeatures.map(feature => {
-      const afterTag = feature.tags.find(({name}) => /^@After:/.test(name))
+      const afterTag = feature.tags.find(({ name }) => /^@After:/.test(name))
       if (afterTag) {
         return [afterTag.name.split(':')[1], feature.name]
       }
@@ -533,7 +533,7 @@ const runFeatures = () => Promise
     const sortedFeatureNames = toposort(featureDependencies).filter(feature => feature)
 
     // Now run the features in the right order
-    const sortedFeatures = sortedFeatureNames.map(featureName => parsedFeatures.find(({name}) => name === featureName))
+    const sortedFeatures = sortedFeatureNames.map(featureName => parsedFeatures.find(({ name }) => name === featureName))
 
     return Promise
       .mapSeries(
@@ -545,7 +545,7 @@ const runFeatures = () => Promise
               const runScenario = (type, name, steps, dataset = {}) => Promise
                 .mapSeries(
                   steps,
-                  ({text: step, argument, keyword}) => new Promise((resolve, reject) => {
+                  ({ text: step, argument, keyword }) => new Promise((resolve, reject) => {
                     // Replace Gherkin arguments in strings
                     const replaceArguments = str => Object.keys(dataset).reduce((str, key) => str.replace(new RegExp(
                       `<${key}>`
@@ -603,10 +603,10 @@ const runFeatures = () => Promise
               if (scenario.type === 'ScenarioOutline') {
                 // Execute the scenario for every provided example dataset
                 const examples = scenario.examples
-                  .find(({type}) => type === 'Examples')
-                const tableBody = examples.tableBody.filter(({type}) => type === 'TableRow')
+                  .find(({ type }) => type === 'Examples')
+                const tableBody = examples.tableBody.filter(({ type }) => type === 'TableRow')
 
-                const exampleDatasets = tableBody.map(({cells}) => cells.reduce((dataset, {value}, idx) => {
+                const exampleDatasets = tableBody.map(({ cells }) => cells.reduce((dataset, { value }, idx) => {
                   dataset[examples.tableHeader.cells[idx].value] = value
                   return dataset
                 }, {}))

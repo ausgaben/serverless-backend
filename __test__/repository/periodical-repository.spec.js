@@ -1,9 +1,9 @@
 /* global describe expect it beforeAll afterAll */
 
-const {PeriodicalRepository} = require('../../repository/periodical')
+const { PeriodicalRepository } = require('../../repository/periodical')
 const Promise = require('bluebird')
-const {ModelEvent, EventStore, AggregateRelation} = require('@rheactorjs/event-store-dynamodb')
-const {dynamoDB, close} = require('@rheactorjs/event-store-dynamodb/test/helper')
+const { ModelEvent, EventStore, AggregateRelation } = require('@rheactorjs/event-store-dynamodb')
+const { dynamoDB, close } = require('@rheactorjs/event-store-dynamodb/test/helper')
 
 describe('PeriodicalRepository', () => {
   let periodicalRepo

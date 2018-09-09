@@ -1,8 +1,8 @@
 'use strict'
 
-const {successHandler} = require('./response')
-const {relations} = require('./jsonld')
-const {URIValue} = require('@rheactorjs/value-objects')
+const { successHandler } = require('./response')
+const { relations } = require('./jsonld')
+const { URIValue } = require('@rheactorjs/value-objects')
 
 module.exports = {
   index: (event, context, callback) => {

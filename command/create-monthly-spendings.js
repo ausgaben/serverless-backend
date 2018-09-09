@@ -32,4 +32,4 @@ class CreateMonthlySpendingsCommand {
   }
 }
 
-module.exports = {CreateMonthlySpendingsCommand}
+module.exports = { CreateMonthlySpendingsCommand }

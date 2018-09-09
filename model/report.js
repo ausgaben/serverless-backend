@@ -8,4 +8,4 @@ function ReportModel (checkingAccount) {
   this.savings = 0
 }
 
-module.exports = {ReportModel}
+module.exports = { ReportModel }

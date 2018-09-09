@@ -1,14 +1,14 @@
 'use strict'
 
-const {successHandler, errorHandler} = require('./response')
-const {Pagination} = require('@rheactorjs/event-store-dynamodb')
+const { successHandler, errorHandler } = require('./response')
+const { Pagination } = require('@rheactorjs/event-store-dynamodb')
 const Joi = require('joi')
-const {List, ID} = require('@rheactorjs/models')
-const {URIValue} = require('@rheactorjs/value-objects')
-const {Periodical} = require('@ausgaben/models')
-const {PeriodicalModel} = require('../model/periodical')
-const {relations} = require('./jsonld')
-const {joi: {validate, NonEmptyString, Integer, Boolean}, authorize, checkingAccountService: service} = require('./util')
+const { List, ID } = require('@rheactorjs/models')
+const { URIValue } = require('@rheactorjs/value-objects')
+const { Periodical } = require('@ausgaben/models')
+const { PeriodicalModel } = require('../model/periodical')
+const { relations } = require('./jsonld')
+const { joi: { validate, NonEmptyString, Integer, Boolean }, authorize, checkingAccountService: service } = require('./util')
 
 const presentPeriodical = relations => aggregate => new Periodical({
   $id: new ID(
@@ -45,7 +45,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          Object.assign({}, JSON.parse(event.body), {checkingAccountId: event.pathParameters.id}),
+          Object.assign({}, JSON.parse(event.body), { checkingAccountId: event.pathParameters.id }),
           Joi.object().keys({
             checkingAccountId: NonEmptyString.required(),
             category: NonEmptyString.required(),
@@ -117,7 +117,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          Object.assign({}, event.queryStringParameters, {checkingAccountId: event.pathParameters.id}),
+          Object.assign({}, event.queryStringParameters, { checkingAccountId: event.pathParameters.id }),
           Joi.object().keys({
             checkingAccountId: NonEmptyString.required(),
             offset: Joi.number().min(0)
@@ -125,8 +125,8 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{checkingAccountId, offset}, user]) => service(context).findPeriodicals(user, checkingAccountId, new Pagination(offset)))
-      .then(({items, total, itemsPerPage, offset}) => new List(items.map(presentPeriodical(relations(new URIValue(process.env.API_ENDPOINT)))), total, itemsPerPage, [], offset))
+      .then(([{ checkingAccountId, offset }, user]) => service(context).findPeriodicals(user, checkingAccountId, new Pagination(offset)))
+      .then(({ items, total, itemsPerPage, offset }) => new List(items.map(presentPeriodical(relations(new URIValue(process.env.API_ENDPOINT)))), total, itemsPerPage, [], offset))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
@@ -141,7 +141,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{id}, user]) => service(context).getPeriodicalById(user, id))
+      .then(([{ id }, user]) => service(context).getPeriodicalById(user, id))
       .then(periodical => presentPeriodical(relations(new URIValue(process.env.API_ENDPOINT)))(periodical))
       .then(successHandler(callback))
       .catch(errorHandler(callback))

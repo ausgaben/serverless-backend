@@ -1,10 +1,10 @@
 'use strict'
 
-const {successHandler, errorHandler} = require('./response')
-const {ID, User} = require('@rheactorjs/models')
-const {URIValue, EmailValue} = require('@rheactorjs/value-objects')
-const {relations} = require('./jsonld')
-const {authorize} = require('./util')
+const { successHandler, errorHandler } = require('./response')
+const { ID, User } = require('@rheactorjs/models')
+const { URIValue, EmailValue } = require('@rheactorjs/value-objects')
+const { relations } = require('./jsonld')
+const { authorize } = require('./util')
 
 module.exports = {
   me: (event, context, callback) => {

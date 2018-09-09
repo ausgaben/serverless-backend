@@ -1,4 +1,4 @@
-const {NonEmptyString} = require('@rheactorjs/event-store-dynamodb')
+const { NonEmptyString } = require('@rheactorjs/event-store-dynamodb')
 const t = require('tcomb')
 
 class AggregateSortIndex {
@@ -40,7 +40,7 @@ class AggregateSortIndex {
         },
         UpdateExpression: 'ADD AggregateIds :AggregateId',
         ExpressionAttributeValues: {
-          ':AggregateId': {SS: [aggregateId]}
+          ':AggregateId': { SS: [aggregateId] }
         }
       })
       .promise()
@@ -63,15 +63,15 @@ class AggregateSortIndex {
         KeyConditionExpression: 'IndexName = :IndexName AND IndexKey > :IndexKey',
         FilterExpression: 'contains(AggregateIds, :AggregateId)',
         ExpressionAttributeValues: {
-          ':IndexName': {S: `${this.aggregateName}.${indexName}`},
-          ':IndexKey': {S: Buffer.from('\0', 'ascii').toString()},
-          ':AggregateId': {S: aggregateId}
+          ':IndexName': { S: `${this.aggregateName}.${indexName}` },
+          ':IndexKey': { S: Buffer.from('\0', 'ascii').toString() },
+          ':AggregateId': { S: aggregateId }
         }
       })
       .promise()
-      .then(({Items}) => {
+      .then(({ Items }) => {
         if (Items) {
-          return Promise.all(Items.map(({IndexName, IndexKey}) => this.dynamoDB
+          return Promise.all(Items.map(({ IndexName, IndexKey }) => this.dynamoDB
             .updateItem({
               TableName: this.tableName,
               Key: {
@@ -80,7 +80,7 @@ class AggregateSortIndex {
               },
               UpdateExpression: 'DELETE AggregateIds :AggregateId',
               ExpressionAttributeValues: {
-                ':AggregateId': {SS: [aggregateId]}
+                ':AggregateId': { SS: [aggregateId] }
               }
             })
             .promise()))
@@ -104,25 +104,25 @@ class AggregateSortIndex {
       TableName: this.tableName,
       KeyConditionExpression: 'IndexName = :IndexName AND IndexKey >= :from',
       ExpressionAttributeValues: {
-        ':IndexName': {S: `${this.aggregateName}.${indexName}`},
-        ':from': {S: from}
+        ':IndexName': { S: `${this.aggregateName}.${indexName}` },
+        ':from': { S: from }
       }
     }
     if (to) {
       q.KeyConditionExpression = 'IndexName = :IndexName AND IndexKey BETWEEN :from AND :to'
-      q.ExpressionAttributeValues[':to'] = {S: to}
+      q.ExpressionAttributeValues[':to'] = { S: to }
     }
     return this.dynamoDB
       .query(q)
       .promise()
-      .then(({Items}) => {
-        const idx = (Items || []).reduce((idx, {AggregateIds: {SS}, IndexKey: {S}}) => {
+      .then(({ Items }) => {
+        const idx = (Items || []).reduce((idx, { AggregateIds: { SS }, IndexKey: { S } }) => {
           SS.forEach(id => {
             idx[id] = S
           })
           return idx
         }, {})
-        const idSets = (Items || []).map(({AggregateIds}) => AggregateIds.SS)
+        const idSets = (Items || []).map(({ AggregateIds }) => AggregateIds.SS)
         const flattened = idSets.reduce((idSets, ids) => idSets.concat(ids), [])
         return flattened.sort((id1, id2) => idx[id1] > idx[id2] ? 1 : -1)
       })
@@ -194,19 +194,19 @@ class AggregateSortIndex {
       TableName: this.tableName,
       KeyConditionExpression: 'IndexName = :IndexName AND IndexKey >= :from',
       ExpressionAttributeValues: {
-        ':IndexName': {S: `${this.aggregateName}.${indexName}`},
-        ':from': {S: from}
+        ':IndexName': { S: `${this.aggregateName}.${indexName}` },
+        ':from': { S: from }
       }
     }
     if (to) {
       q.KeyConditionExpression = 'IndexName = :IndexName AND IndexKey BETWEEN :from AND :to'
-      q.ExpressionAttributeValues[':to'] = {S: to}
+      q.ExpressionAttributeValues[':to'] = { S: to }
     }
     return this.dynamoDB
       .query(q)
       .promise()
-      .then(({Items}) => (Items || []).map(({IndexKey: {S}}) => S))
+      .then(({ Items }) => (Items || []).map(({ IndexKey: { S } }) => S))
   }
 }
 
-module.exports = {AggregateSortIndex}
+module.exports = { AggregateSortIndex }

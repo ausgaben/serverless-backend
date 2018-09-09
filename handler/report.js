@@ -1,12 +1,12 @@
 'use strict'
 
-const {successHandler, errorHandler} = require('./response')
+const { successHandler, errorHandler } = require('./response')
 const Joi = require('joi')
-const {joi: {validate, NonEmptyString}, authorize, checkingAccountService: service} = require('./util')
-const {relations} = require('./jsonld')
-const {Report, CheckingAccount} = require('@ausgaben/models')
-const {Reference, ID} = require('@rheactorjs/models')
-const {URIValue} = require('@rheactorjs/value-objects')
+const { joi: { validate, NonEmptyString }, authorize, checkingAccountService: service } = require('./util')
+const { relations } = require('./jsonld')
+const { Report, CheckingAccount } = require('@ausgaben/models')
+const { Reference, ID } = require('@rheactorjs/models')
+const { URIValue } = require('@rheactorjs/value-objects')
 
 const presentReport = relations => aggregate => new Report({
   balance: aggregate.balance,
@@ -24,7 +24,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          Object.assign({}, event.queryStringParameters, {id: event.pathParameters.id}),
+          Object.assign({}, event.queryStringParameters, { id: event.pathParameters.id }),
           Joi.object().keys({
             id: NonEmptyString.required(),
             q: NonEmptyString
@@ -32,7 +32,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{id, q}, user]) => service(context).getReport(user, id, q))
+      .then(([{ id, q }, user]) => service(context).getReport(user, id, q))
       .then(report => presentReport(relations(new URIValue(process.env.API_ENDPOINT)))(report))
       .then(successHandler(callback))
       .catch(errorHandler(callback))

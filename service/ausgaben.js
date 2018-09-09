@@ -1,12 +1,12 @@
 'use strict'
 
-const {AggregateRelation, EventStore} = require('@rheactorjs/event-store-dynamodb')
-const {CheckingAccountRepository} = require('../repository/checking-account')
-const {SpendingRepository} = require('../repository/spending')
-const {PeriodicalRepository} = require('../repository/periodical')
-const {AggregateSortIndex} = require('../repository/aggregate-sort-index')
-const {AccessDeniedError, ConflictError} = require('@rheactorjs/errors')
-const {ReportModel} = require('../model/report')
+const { AggregateRelation, EventStore } = require('@rheactorjs/event-store-dynamodb')
+const { CheckingAccountRepository } = require('../repository/checking-account')
+const { SpendingRepository } = require('../repository/spending')
+const { PeriodicalRepository } = require('../repository/periodical')
+const { AggregateSortIndex } = require('../repository/aggregate-sort-index')
+const { AccessDeniedError, ConflictError } = require('@rheactorjs/errors')
+const { ReportModel } = require('../model/report')
 const AWS = require('aws-sdk')
 const Promise = require('bluebird')
 AWS.config.setPromisesDependency(Promise)
@@ -36,7 +36,7 @@ class Ausgaben {
   }
 
   create (name, user) {
-    return this.checkingAccountRepo.add({name, users: [user]})
+    return this.checkingAccountRepo.add({ name, users: [user] })
       .then(() => undefined)
   }
 
@@ -70,7 +70,7 @@ class Ausgaben {
   update (user, id, version, property, value) {
     return this.getById(user, id)
       .then(checkVersion(version))
-      .then(checkingAccount => this.checkingAccountRepo.update(checkingAccount, {[property]: value}))
+      .then(checkingAccount => this.checkingAccountRepo.update(checkingAccount, { [property]: value }))
       .then(() => undefined)
   }
 
@@ -106,7 +106,7 @@ class Ausgaben {
 
   findSpendings (user, checkingAccountId, query = '', pagination) {
     const p = parseQuery(query)
-    return this.spendingRepo.findIdsByCheckingAccountId(checkingAccountId, {from: p.tokens.from, to: p.tokens.to})
+    return this.spendingRepo.findIdsByCheckingAccountId(checkingAccountId, { from: p.tokens.from, to: p.tokens.to })
       .then(spendingIds => {
         const total = spendingIds.length
         return Promise.all(pagination.splice(spendingIds).map(id => this.spendingRepo.getById(id)))
@@ -135,7 +135,7 @@ class Ausgaben {
         to: p.tokens.to
       })
         .map(id => this.spendingRepo.getById(id))
-        .filter(({booked}) => booked)
+        .filter(({ booked }) => booked)
         .reduce((report, spending) => {
           report.balance += spending.amount
           if (spending.amount >= 0) {
@@ -165,7 +165,7 @@ class Ausgaben {
       })
       .then(strings => {
         const total = strings.length
-        return pagination.result(pagination.splice(strings.map(title => ({title}))), total, query)
+        return pagination.result(pagination.splice(strings.map(title => ({ title }))), total, query)
       })
   }
 
@@ -252,4 +252,4 @@ const checkVersion = theirVersion => aggregate => {
   return aggregate
 }
 
-module.exports = {Ausgaben}
+module.exports = { Ausgaben }

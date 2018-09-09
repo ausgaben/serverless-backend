@@ -1,7 +1,7 @@
-const {AggregateRepository, AggregateMeta} = require('@rheactorjs/event-store-dynamodb')
-const {PeriodicalModel} = require('../model/periodical')
-const {Date: DateType} = require('tcomb')
-const {v4} = require('uuid')
+const { AggregateRepository, AggregateMeta } = require('@rheactorjs/event-store-dynamodb')
+const { PeriodicalModel } = require('../model/periodical')
+const { Date: DateType } = require('tcomb')
+const { v4 } = require('uuid')
 
 /**
  * Creates a new periodical repository
@@ -36,7 +36,7 @@ class PeriodicalRepository extends AggregateRepository {
     DateType(date, ['PeriodicalRepository', 'findByMonth()', 'date:Date'])
     const mask = PeriodicalModel.monthFlags[date.getMonth()]
     return this.findAll()
-      .filter(({enabledIn}) => enabledIn & mask)
+      .filter(({ enabledIn }) => enabledIn & mask)
   }
 
   findIdsByCheckingAccountId (checkingAccountId) {
@@ -44,4 +44,4 @@ class PeriodicalRepository extends AggregateRepository {
   }
 }
 
-module.exports = {PeriodicalRepository}
+module.exports = { PeriodicalRepository }

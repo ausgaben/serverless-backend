@@ -1,13 +1,13 @@
 'use strict'
 
-const {successHandler, errorHandler} = require('./response')
-const {Pagination} = require('@rheactorjs/event-store-dynamodb')
+const { successHandler, errorHandler } = require('./response')
+const { Pagination } = require('@rheactorjs/event-store-dynamodb')
 const Joi = require('joi')
-const {List, ID} = require('@rheactorjs/models')
-const {URIValue} = require('@rheactorjs/value-objects')
-const {Spending} = require('@ausgaben/models')
-const {relations} = require('./jsonld')
-const {joi: {validate, NonEmptyString, Integer, Boolean}, authorize, checkingAccountService: service} = require('./util')
+const { List, ID } = require('@rheactorjs/models')
+const { URIValue } = require('@rheactorjs/value-objects')
+const { Spending } = require('@ausgaben/models')
+const { relations } = require('./jsonld')
+const { joi: { validate, NonEmptyString, Integer, Boolean }, authorize, checkingAccountService: service } = require('./util')
 
 const presentSpending = relations => aggregate => new Spending({
   $id: new ID(
@@ -32,7 +32,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          Object.assign({}, JSON.parse(event.body), {checkingAccountId: event.pathParameters.id}),
+          Object.assign({}, JSON.parse(event.body), { checkingAccountId: event.pathParameters.id }),
           Joi.object().keys({
             checkingAccountId: NonEmptyString.required(),
             category: NonEmptyString.required(),
@@ -44,7 +44,7 @@ module.exports = {
           })),
         authorize(event)
       ])
-      .then(([{checkingAccountId, category, title, amount, booked, bookedAt, saving}, user]) => service(context).createSpending(user, checkingAccountId, category, title, amount, booked, bookedAt, saving))
+      .then(([{ checkingAccountId, category, title, amount, booked, bookedAt, saving }, user]) => service(context).createSpending(user, checkingAccountId, category, title, amount, booked, bookedAt, saving))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
@@ -52,7 +52,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          Object.assign({}, event.queryStringParameters, {checkingAccountId: event.pathParameters.id}),
+          Object.assign({}, event.queryStringParameters, { checkingAccountId: event.pathParameters.id }),
           Joi.object().keys({
             checkingAccountId: NonEmptyString.required(),
             q: NonEmptyString,
@@ -61,8 +61,8 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{checkingAccountId, q, offset}, user]) => service(context).findSpendings(user, checkingAccountId, q, new Pagination(offset)))
-      .then(({items, total, itemsPerPage, offset}) => new List(items.map(presentSpending(relations(new URIValue(process.env.API_ENDPOINT)))), total, itemsPerPage, [], offset))
+      .then(([{ checkingAccountId, q, offset }, user]) => service(context).findSpendings(user, checkingAccountId, q, new Pagination(offset)))
+      .then(({ items, total, itemsPerPage, offset }) => new List(items.map(presentSpending(relations(new URIValue(process.env.API_ENDPOINT)))), total, itemsPerPage, [], offset))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
@@ -77,7 +77,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{id}, user]) => service(context).getSpendingById(user, id))
+      .then(([{ id }, user]) => service(context).getSpendingById(user, id))
       .then(spending => presentSpending(relations(new URIValue(process.env.API_ENDPOINT)))(spending))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
@@ -86,7 +86,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          Object.assign({}, JSON.parse(event.body), event.pathParameters, {version: event.headers['If-Match']}),
+          Object.assign({}, JSON.parse(event.body), event.pathParameters, { version: event.headers['If-Match'] }),
           Joi.object().keys({
             id: NonEmptyString.required(),
             category: NonEmptyString,
@@ -100,7 +100,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{id, category, title, amount, booked, bookedAt, saving, version}, user]) => service(context).updateSpending(user, id, version, category, title, amount, booked, bookedAt, saving))
+      .then(([{ id, category, title, amount, booked, bookedAt, saving, version }, user]) => service(context).updateSpending(user, id, version, category, title, amount, booked, bookedAt, saving))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
@@ -115,7 +115,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{id}, user]) => service(context).deleteSpendingById(user, id))
+      .then(([{ id }, user]) => service(context).deleteSpendingById(user, id))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   }

@@ -1,15 +1,15 @@
 /* global describe expect it afterAll beforeAll */
 
-const {CreateMonthlySpendingsCommand} = require('../../command/create-monthly-spendings')
-const {PeriodicalRepository} = require('../../repository/periodical')
-const {SpendingRepository} = require('../../repository/spending')
-const {AggregateSortIndex} = require('../../repository/aggregate-sort-index')
-const {PeriodicalModel} = require('../../model/periodical')
-const {dynamoDB, close} = require('@rheactorjs/event-store-dynamodb/test/helper')
-const {EventStore, AggregateRelation} = require('@rheactorjs/event-store-dynamodb')
+const { CreateMonthlySpendingsCommand } = require('../../command/create-monthly-spendings')
+const { PeriodicalRepository } = require('../../repository/periodical')
+const { SpendingRepository } = require('../../repository/spending')
+const { AggregateSortIndex } = require('../../repository/aggregate-sort-index')
+const { PeriodicalModel } = require('../../model/periodical')
+const { dynamoDB, close } = require('@rheactorjs/event-store-dynamodb/test/helper')
+const { EventStore, AggregateRelation } = require('@rheactorjs/event-store-dynamodb')
 const Promise = require('bluebird')
 
-const {AggregateMeta} = require('@rheactorjs/event-store-dynamodb')
+const { AggregateMeta } = require('@rheactorjs/event-store-dynamodb')
 
 describe('CreateMonthlySpendingsCommand', () => {
   let task

@@ -1,13 +1,13 @@
 'use strict'
 
-const {successHandler, errorHandler} = require('./response')
-const {Pagination} = require('@rheactorjs/event-store-dynamodb')
+const { successHandler, errorHandler } = require('./response')
+const { Pagination } = require('@rheactorjs/event-store-dynamodb')
 const Joi = require('joi')
-const {List, ID} = require('@rheactorjs/models')
-const {URIValue} = require('@rheactorjs/value-objects')
-const {CheckingAccount, Title} = require('@ausgaben/models')
-const {relations} = require('./jsonld')
-const {joi: {validate, NonEmptyString, Integer}, authorize, checkingAccountService: service} = require('./util')
+const { List, ID } = require('@rheactorjs/models')
+const { URIValue } = require('@rheactorjs/value-objects')
+const { CheckingAccount, Title } = require('@ausgaben/models')
+const { relations } = require('./jsonld')
+const { joi: { validate, NonEmptyString, Integer }, authorize, checkingAccountService: service } = require('./util')
 
 const presentCheckingAccount = relations => aggregate => new CheckingAccount({
   $id: new ID(
@@ -52,8 +52,8 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{offset}, user]) => service(context).find(user, '', new Pagination(offset)))
-      .then(({items, total, itemsPerPage, offset}) => new List(items.map(presentCheckingAccount(relations(new URIValue(process.env.API_ENDPOINT)))), total, itemsPerPage, [], offset))
+      .then(([{ offset }, user]) => service(context).find(user, '', new Pagination(offset)))
+      .then(({ items, total, itemsPerPage, offset }) => new List(items.map(presentCheckingAccount(relations(new URIValue(process.env.API_ENDPOINT)))), total, itemsPerPage, [], offset))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
@@ -68,7 +68,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{id}, user]) => service(context).getById(user, id))
+      .then(([{ id }, user]) => service(context).getById(user, id))
       .then(checkingAccount => presentCheckingAccount(relations(new URIValue(process.env.API_ENDPOINT)))(checkingAccount))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
@@ -77,7 +77,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          Object.assign({}, event.pathParameters, JSON.parse(event.body), {version: event.headers['If-Match']}),
+          Object.assign({}, event.pathParameters, JSON.parse(event.body), { version: event.headers['If-Match'] }),
           Joi.object().keys({
             id: NonEmptyString.required(),
             property: NonEmptyString.required(),
@@ -87,7 +87,7 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{id, property, value, version}, user]) => service(context).update(user, id, version, property, value))
+      .then(([{ id, property, value, version }, user]) => service(context).update(user, id, version, property, value))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },
@@ -103,8 +103,8 @@ module.exports = {
         ),
         authorize(event)
       ])
-      .then(([{id, q}, user]) => service(context).searchTitles(user, id, q, new Pagination(0))
-        .then(({items, total, itemsPerPage, offset}) => new List(items.map(({title}) => new Title(title)), total, itemsPerPage, [], offset))
+      .then(([{ id, q }, user]) => service(context).searchTitles(user, id, q, new Pagination(0))
+        .then(({ items, total, itemsPerPage, offset }) => new List(items.map(({ title }) => new Title(title)), total, itemsPerPage, [], offset))
       )
       .then(successHandler(callback))
       .catch(errorHandler(callback))

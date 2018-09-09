@@ -1,8 +1,8 @@
 'use strict'
 
-const {HttpProblem} = require('@rheactorjs/models')
-const {URIValue} = require('@rheactorjs/value-objects')
-const {ValidationFailedError, EntryDeletedError} = require('@rheactorjs/errors')
+const { HttpProblem } = require('@rheactorjs/models')
+const { URIValue } = require('@rheactorjs/value-objects')
+const { ValidationFailedError, EntryDeletedError } = require('@rheactorjs/errors')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // Required for CORS support to work
@@ -12,7 +12,7 @@ const corsHeaders = {
 const h = body => {
   let h = Object.assign({}, corsHeaders)
   if (body) {
-    h = Object.assign(h, {'Content-Type': 'application/vnd.ausgaben.v1+json; charset=utf-8'})
+    h = Object.assign(h, { 'Content-Type': 'application/vnd.ausgaben.v1+json; charset=utf-8' })
   }
   return h
 }

@@ -1,6 +1,6 @@
-const {AggregateRepository, AggregateMeta} = require('@rheactorjs/event-store-dynamodb')
-const {SpendingModel} = require('../model/spending')
-const {v4} = require('uuid')
+const { AggregateRepository, AggregateMeta } = require('@rheactorjs/event-store-dynamodb')
+const { SpendingModel } = require('../model/spending')
+const { v4 } = require('uuid')
 
 /**
  * Creates a new spending repository
@@ -65,7 +65,7 @@ class SpendingRepository extends AggregateRepository {
       )
   }
 
-  findIdsByCheckingAccountId (checkingAccountId, {from, to} = {}) {
+  findIdsByCheckingAccountId (checkingAccountId, { from, to } = {}) {
     return this.relation.findByRelatedId('checkingAccount', checkingAccountId)
       .then(ids => {
         if (from) {
@@ -81,4 +81,4 @@ const updateBookedIndex = index => (checkingAccountId, aggregateId, bookedAt) =>
   ? index.add(`checkingAccount:${checkingAccountId}:bookedAt`, aggregateId, bookedAt.toISOString())
   : index.remove(`checkingAccount:${checkingAccountId}:bookedAt`, aggregateId)
 
-module.exports = {SpendingRepository}
+module.exports = { SpendingRepository }
