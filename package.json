@@ -35,7 +35,7 @@
     "@rheactorjs/event-store-dynamodb": "^2.3.3",
     "@rheactorjs/models": "^4.0.1",
     "bluebird": "^3.5.2",
-    "joi": "^13.6.0",
+    "joi": "^14.0.0",
     "tcomb": "^3.2.27",
     "uuid": "^3.3.2"
   }
