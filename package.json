@@ -20,7 +20,7 @@
     "chalk": "^2.4.1",
     "codeclimate-test-reporter": "^0.5.0",
     "dinossauro": "0.0.7",
-    "gherkin": "^5.1.0",
+    "gherkin": "^6.0.15",
     "husky": "^0.14.3",
     "jest": "^23.5.0",
     "jsonata": "^1.5.4",
