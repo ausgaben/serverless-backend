@@ -74,10 +74,40 @@ const paginate = async (
             console.log(`${accountSpendings.length} spendings`)
             await Promise.map(
               accountSpendings,
-              ({ category, title, amount, booked = false, bookedAt, saving = false }) => ausgaben.createSpending(
-                userId,
-                account.meta.id, category, title, amount, booked, bookedAt ? new Date(bookedAt) : undefined, saving
-              ),
+              ({ category, title, amount, booked = false, bookedAt, saving = false }) => {
+                return ausgaben.spendingRepo.add({
+                  checkingAccount: account.meta.id,
+                  category,
+                  title,
+                  amount,
+                  booked,
+                  bookedAt: bookedAt ? new Date(bookedAt) : undefined,
+                  saving
+                })
+              },
+              { concurrency: 1 }
+            )
+
+            const categoryTitles = accountSpendings.reduce((categories, { category, title }) => {
+              if (!categories[category]) {
+                categories[category] = []
+              }
+              if (!categories[category].includes(title)) {
+                categories[category].push(title)
+              }
+              return categories
+            }, {})
+
+            await Promise.map(
+              Object.keys(categoryTitles),
+              async category => {
+                await ausgaben.checkingAccountRepo.sortIndex.addToList(`checkingAccount:${account.meta.id}:category`, category)
+                await Promise.map(
+                  categoryTitles[category],
+                  title => ausgaben.checkingAccountRepo.sortIndex.addToList(`checkingAccount:${account.meta.id}:title:category:${category}`, title),
+                  { concurrency: 1 }
+                )
+              },
               { concurrency: 1 }
             )
           }
