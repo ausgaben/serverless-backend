@@ -1,6 +1,6 @@
 const { UnhandledDomainEventError } = require('@rheactorjs/errors')
 const { AggregateRoot, ModelEvent, AggregateMeta, NonEmptyString } = require('@rheactorjs/event-store-dynamodb')
-const { CheckingAccountUpdatedEvent, CheckingAccountCreatedEvent } = require('./events')
+const { CheckingAccountUpdatedEvent, CheckingAccountCreatedEvent, CheckingAccountDeletedEvent } = require('./events')
 const { Boolean: BooleanType } = require('tcomb')
 const t = require('tcomb')
 const NonEmptyListOfNonEmptyStrings = t.refinement(t.list(NonEmptyString), l => l.length > 0, 'NonEmptyListOfNonEmptyStrings')
@@ -67,6 +67,17 @@ class CheckingAccountModel extends AggregateRoot {
   }
 
   /**
+   * @returns {ModelEvent}
+   */
+  delete () {
+    return new ModelEvent(
+      this.meta.id,
+      this.meta.version + 1,
+      CheckingAccountDeletedEvent
+    )
+  }
+
+  /**
    * Applies the event
    *
    * @param {ModelEvent} event
@@ -84,7 +95,8 @@ class CheckingAccountModel extends AggregateRoot {
           name, currency, users, monthly, savings
         }
         return new CheckingAccountModel(d.name, d.currency, d.users, d.monthly, d.savings, checkingAccount.meta.updated(createdAt))
-
+      case CheckingAccountDeletedEvent:
+        return new CheckingAccountModel(checkingAccount.name, checkingAccount.currency, checkingAccount.users, checkingAccount.monthly, checkingAccount.savings, checkingAccount.meta.deleted(createdAt))
       default:
         throw new UnhandledDomainEventError(event.name)
     }

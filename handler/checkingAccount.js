@@ -77,7 +77,7 @@ module.exports = {
     Promise
       .all([
         validate(
-          Object.assign({}, event.pathParameters, JSON.parse(event.body), { version: event.headers['If-Match'] }),
+          Object.assign({}, event.pathParameters, JSON.parse(event.body), { version: event.headers['If-Match'] || event.headers['if-match'] }),
           Joi.object().keys({
             id: NonEmptyString.required(),
             property: NonEmptyString.required(),
@@ -88,6 +88,22 @@ module.exports = {
         authorize(event)
       ])
       .then(([{ id, property, value, version }, user]) => service(context).update(user, id, version, property, value))
+      .then(successHandler(callback))
+      .catch(errorHandler(callback))
+  },
+  delete: (event, context, callback) => {
+    Promise
+      .all([
+        validate(
+          Object.assign({}, event.pathParameters, { version: event.headers['If-Match'] || event.headers['if-match'] }),
+          Joi.object().keys({
+            id: NonEmptyString.required(),
+            version: Integer.required()
+          })
+        ),
+        authorize(event)
+      ])
+      .then(([{ id, version }, user]) => service(context).delete(user, id, version))
       .then(successHandler(callback))
       .catch(errorHandler(callback))
   },

@@ -40,6 +40,19 @@ class CheckingAccountRepository extends AggregateRepository {
       .persist(checkingAccount.update(payload))
   }
 
+  /**
+   * Deletes a CheckingAccount
+   *
+   * @param {CheckingAccountModel} checkingAccount
+   * @return {Promise.<CheckingAccountUpdatedEvent>}
+   */
+  delete (checkingAccount) {
+    return Promise.all([
+      this.eventStore.persist(checkingAccount.delete()),
+      this.relation.removeRelation('user', checkingAccount.meta.id)
+    ])
+  }
+
   findIdsByUser (user) {
     return this.relation.findByRelatedId('user', NonEmptyString(user, ['CheckingAccountRepository', 'findIdsByUser()', 'user:String']))
   }

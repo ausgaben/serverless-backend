@@ -68,6 +68,13 @@ class Ausgaben {
       .then(() => undefined)
   }
 
+  delete (user, id, version) {
+    return this.getById(user, id)
+      .then(checkVersion(version))
+      .then(checkingAccount => this.checkingAccountRepo.delete(checkingAccount))
+      .then(() => undefined)
+  }
+
   createSpending (user, checkingAccountId, category, title, amount, booked = false, bookedAt, saving = false) {
     return this.getById(user, checkingAccountId)
       .then(() => this.spendingRepo.add({

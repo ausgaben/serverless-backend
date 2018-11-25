@@ -7,6 +7,7 @@
     "test": "API_ENDPOINT=https://api.example.com jest -i",
     "test:coverage": "API_ENDPOINT=https://api.example.com jest -i --forceExit --coverage",
     "test:coverage-travis": "npm run test:coverage && codeclimate-test-reporter < ./coverage/lcov.info && rm -rf ./coverage",
+    "lint:fix": "standard --fix",
     "lint": "standard"
   },
   "author": "",
@@ -30,10 +31,10 @@
   },
   "dependencies": {
     "@ausgaben/models": "^3.0.2",
-    "@rheactorjs/event-store-dynamodb": "^2.3.3",
+    "@rheactorjs/event-store-dynamodb": "^2.4.1",
     "@rheactorjs/models": "^4.0.1",
     "bluebird": "^3.5.3",
-    "joi": "^14.1.1",
+    "joi": "^14.2.0",
     "tcomb": "^3.2.29",
     "uuid": "^3.3.2"
   },
@@ -42,5 +43,8 @@
       "commit-msg": "commitlint -e",
       "pre-commit": "npm run lint"
     }
+  },
+  "engines": {
+    "node": ">=8.0.0"
   }
 }
