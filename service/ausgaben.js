@@ -11,12 +11,6 @@ const AWS = require('aws-sdk')
 const Promise = require('bluebird')
 AWS.config.setPromisesDependency(Promise)
 
-/**
- * Creates a new CheckingAccount service
- *
- * @param {EventStore} eventStore
- * @constructor
- */
 class Ausgaben {
   constructor (dynamoDB, eventsTable, indexTable) {
     this.checkingAccountRepo = new CheckingAccountRepository(
